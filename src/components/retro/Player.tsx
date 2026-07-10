@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { nowPlaying } from "@/data/content";
 
 /**
- * Working transport: drives a real <audio> element and plays a short synthesized
- * "retro blip" (Web Audio) on every control press — no audio asset needed for the
- * SFX. Play/Pause toggles; ⏮ restarts; ⏭ jumps near the end (enough to test the
- * controls against the placeholder loop).
+ * Working transport. Primary source is the most-popular beat streamed from
+ * BeatStars; if that fails to load it falls back to a self-contained retro loop,
+ * so the player always plays something. Every control also emits a synthesized
+ * "retro blip" (Web Audio) — no audio asset needed for the SFX. The File/Play
+ * menu can drive it via the `lr:toggle-play` window event.
  */
 export function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -15,9 +16,10 @@ export function Player() {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
   const [elapsed, setElapsed] = useState("0:00");
+  const [total, setTotal] = useState(nowPlaying.total);
+  const [usingFallback, setUsingFallback] = useState(false);
 
-  // Lazily create a shared AudioContext (needs a user gesture on most browsers).
-  function blip(kind: "play" | "skip" | "stop") {
+  const blip = useCallback((kind: "play" | "skip" | "stop") => {
     try {
       const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ac = (acRef.current ??= new AC());
@@ -25,8 +27,7 @@ export function Player() {
       const t = ac.currentTime;
       const osc = ac.createOscillator();
       const gain = ac.createGain();
-      // Square wave = chiptune timbre; a tiny pitch move per action.
-      osc.type = "square";
+      osc.type = "square"; // chiptune timbre
       const base = kind === "stop" ? 220 : kind === "skip" ? 660 : 440;
       osc.frequency.setValueAtTime(base, t);
       osc.frequency.exponentialRampToValueAtTime(base * (kind === "stop" ? 0.5 : 1.5), t + 0.08);
@@ -39,28 +40,48 @@ export function Player() {
     } catch {
       /* Web Audio unavailable — SFX is non-essential. */
     }
-  }
+  }, []);
 
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     const onTime = () => {
-      if (!a.duration) return;
+      if (!a.duration || !isFinite(a.duration)) return;
       setProgress(a.currentTime / a.duration);
       const m = Math.floor(a.currentTime / 60);
       const s = Math.floor(a.currentTime % 60);
       setElapsed(`${m}:${String(s).padStart(2, "0")}`);
     };
+    const onMeta = () => {
+      if (a.duration && isFinite(a.duration)) {
+        const m = Math.floor(a.duration / 60);
+        const s = Math.floor(a.duration % 60);
+        setTotal(`${m}:${String(s).padStart(2, "0")}`);
+      }
+    };
     const onEnd = () => setPlaying(false);
+    // If the BeatStars stream fails, swap to the bundled loop once.
+    const onError = () => {
+      if (!usingFallback && a.src !== location.origin + nowPlaying.fallbackSrc) {
+        setUsingFallback(true);
+        a.src = nowPlaying.fallbackSrc;
+        a.load();
+        if (playing) void a.play();
+      }
+    };
     a.addEventListener("timeupdate", onTime);
+    a.addEventListener("loadedmetadata", onMeta);
     a.addEventListener("ended", onEnd);
+    a.addEventListener("error", onError);
     return () => {
       a.removeEventListener("timeupdate", onTime);
+      a.removeEventListener("loadedmetadata", onMeta);
       a.removeEventListener("ended", onEnd);
+      a.removeEventListener("error", onError);
     };
-  }, []);
+  }, [playing, usingFallback]);
 
-  function toggle() {
+  const toggle = useCallback(() => {
     const a = audioRef.current;
     if (!a) return;
     if (a.paused) {
@@ -72,7 +93,14 @@ export function Player() {
       a.pause();
       setPlaying(false);
     }
-  }
+  }, [blip]);
+
+  // Let the menu bar's Play command drive the transport.
+  useEffect(() => {
+    const h = () => toggle();
+    window.addEventListener("lr:toggle-play", h);
+    return () => window.removeEventListener("lr:toggle-play", h);
+  }, [toggle]);
 
   function restart() {
     const a = audioRef.current;
@@ -84,15 +112,17 @@ export function Player() {
 
   function skip() {
     const a = audioRef.current;
-    if (!a || !a.duration) return;
+    if (!a || !a.duration || !isFinite(a.duration)) return;
     blip("skip");
-    a.currentTime = Math.max(0, a.duration - 2);
+    a.currentTime = Math.max(0, a.duration - 3);
     if (!a.paused) void a.play();
   }
 
   return (
     <div className="transport" aria-label="Audio player">
-      <audio ref={audioRef} src={nowPlaying.src} preload="auto" />
+      {/* No crossOrigin: we only need plain playback, so the browser can stream the
+          BeatStars→S3 redirect as opaque cross-origin media (no CORS requirement). */}
+      <audio ref={audioRef} src={nowPlaying.src} preload="none" />
       <div className="tbtns">
         <button className="tbtn" type="button" onClick={restart} aria-label="Restart">
           ⏮
@@ -106,7 +136,11 @@ export function Player() {
       </div>
       <div className="nowbox">
         <div className="nowlabel">
-          NOW PLAYING: <b>{nowPlaying.title}</b> — {nowPlaying.artist}
+          NOW PLAYING:{" "}
+          <a href={nowPlaying.buyUrl} target="_blank" rel="noopener noreferrer" className="nowlink">
+            <b>{usingFallback ? "Retro Test Loop" : nowPlaying.title}</b>
+          </a>{" "}
+          — {usingFallback ? "Placeholder" : nowPlaying.artist}
         </div>
         <div className="seek" aria-hidden="true">
           <div className="fill" style={{ inset: `0 ${100 - progress * 100}% 0 0` }} />
@@ -114,7 +148,7 @@ export function Player() {
         </div>
       </div>
       <span className="ttime">
-        {elapsed} / {nowPlaying.total}
+        {elapsed} / {total}
       </span>
       <div className={`teq ${playing ? "on" : ""}`} aria-hidden="true">
         {Array.from({ length: 10 }).map((_, i) => (

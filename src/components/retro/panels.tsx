@@ -1,4 +1,15 @@
-import { beats, kits, socials, about, channelBadges } from "@/data/content";
+import {
+  beats,
+  kits,
+  socials,
+  about,
+  channelBadges,
+  beatstarsStore,
+  catalogueTotals,
+  catalogueShown,
+  hasMoreBeats,
+  hasMoreKits,
+} from "@/data/content";
 import { SocialIcon } from "./icons";
 
 /** Real external links open in a new tab; "#" placeholders stay in-page. */
@@ -31,8 +42,7 @@ export function BeatsPanel() {
         <div className="lhead">
           <span>#</span>
           <span>Title</span>
-          <span>BPM</span>
-          <span className="h-key">Key</span>
+          <span className="h-plays">Plays</span>
           <span>Time</span>
           <span className="h-buy">License</span>
         </div>
@@ -40,8 +50,7 @@ export function BeatsPanel() {
           <div className={`row ${b.playing ? "playing" : ""}`} key={b.title}>
             <span className="num">{b.n}</span>
             <span className="ttl">{b.title}</span>
-            <span className="mut">{b.bpm}</span>
-            <span className="mut r-key">{b.key}</span>
+            <span className="mut r-plays">▶ {b.plays.toLocaleString()}</span>
             <span className="mut">{b.time}</span>
             <a className="buy" href={b.buyUrl} {...ext(b.buyUrl)}>
               [BUY ↗]
@@ -49,7 +58,15 @@ export function BeatsPanel() {
           </div>
         ))}
       </div>
-      <p className="listhint">» Double-click a track to preview · checkout &amp; licensing handled on BeatStars</p>
+      <p className="listhint">
+        » Top {catalogueShown.beats} by plays · checkout &amp; licensing handled on BeatStars
+      </p>
+      {hasMoreBeats ? (
+        <a className="browseall" href={beatstarsStore} target="_blank" rel="noopener noreferrer">
+          <span>Browse all {catalogueTotals.beats.toLocaleString()} beats on BeatStars</span>
+          <span className="arr">↗</span>
+        </a>
+      ) : null}
     </>
   );
 }
@@ -75,6 +92,12 @@ export function KitsPanel() {
         ))}
       </div>
       <p className="listhint">» Instant download after checkout · same sounds used across the catalogue</p>
+      {hasMoreKits ? (
+        <a className="browseall" href={beatstarsStore} target="_blank" rel="noopener noreferrer">
+          <span>Browse all {catalogueTotals.kits.toLocaleString()} kits on BeatStars</span>
+          <span className="arr">↗</span>
+        </a>
+      ) : null}
     </>
   );
 }

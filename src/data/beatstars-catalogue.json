@@ -1,70 +1,102 @@
 {
-  "_generatedAt": "2026-07-10T21:33:03.694Z",
+  "_generatedAt": "2026-07-10T21:46:05.969Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
+  "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
   "totals": {
     "beats": 227,
     "kits": 4
   },
+  "shown": {
+    "beats": 10,
+    "kits": 4
+  },
+  "topBeat": {
+    "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
+    "artist": "Luka Rajhl",
+    "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
+    "total": "03:02",
+    "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214"
+  },
   "beats": [
     {
       "n": "▶",
-      "title": "fakemink + feng + 2016 type beat - \"hashtag\"",
-      "bpm": 100,
-      "key": "G# min",
-      "time": "02:38",
-      "price": "$25",
-      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-2016-type-beat-hashtag-25007201",
+      "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
+      "time": "03:02",
+      "plays": 765,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "playing": true
     },
     {
       "n": "02",
-      "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
-      "bpm": 93,
-      "key": "F# min",
-      "time": "03:02",
-      "price": "$25",
-      "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
-      "playing": false
-    },
-    {
-      "n": "03",
       "title": "fakemink + feng type beat - \"on the line\"",
-      "bpm": 97,
-      "key": "F min",
       "time": "01:24",
-      "price": "$25",
+      "plays": 734,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
       "playing": false
     },
     {
-      "n": "04",
+      "n": "03",
       "title": "fakemink + suzy sheer + snow strippers type beat \"leave now\"",
-      "bpm": 124,
-      "key": "F# min",
       "time": "02:21",
-      "price": "$25",
+      "plays": 605,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
       "playing": false
     },
     {
-      "n": "05",
+      "n": "04",
       "title": "fakemink + feng type beat - \"why did you leave?\"",
-      "bpm": 85,
-      "key": "C min",
       "time": "01:33",
-      "price": "$25",
+      "plays": 527,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
       "playing": false
     },
     {
-      "n": "06",
+      "n": "05",
       "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
-      "bpm": 142,
-      "key": "G min",
       "time": "02:05",
-      "price": "$25",
+      "plays": 519,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
+      "playing": false
+    },
+    {
+      "n": "06",
+      "title": "fakemink + suzy sheer type beat - \"manifest\"",
+      "time": "01:33",
+      "plays": 510,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-type-beat-manifest-24552914",
+      "playing": false
+    },
+    {
+      "n": "07",
+      "title": "fakemink + feng type beat - \"white noise\"",
+      "time": "01:50",
+      "plays": 458,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-white-noise-24469816",
+      "playing": false
+    },
+    {
+      "n": "08",
+      "title": "fakemink + puresnow type beat - \"on me\"",
+      "time": "02:44",
+      "plays": 445,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
+      "playing": false
+    },
+    {
+      "n": "09",
+      "title": "fakemink + 2016 type beat - \"prayed for this\"",
+      "time": "01:24",
+      "plays": 388,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-2016-type-beat-prayed-for-this-24260596",
+      "playing": false
+    },
+    {
+      "n": "10",
+      "title": "fakemink + feng type beat - \"closer\"",
+      "time": "01:38",
+      "plays": 348,
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-closer-23967753",
       "playing": false
     }
   ],

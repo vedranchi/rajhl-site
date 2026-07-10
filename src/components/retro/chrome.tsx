@@ -26,28 +26,6 @@ export function Window({ title, icon = "note", className, ariaLabel, children }:
   );
 }
 
-export function MenuBar() {
-  return (
-    <div className="menubar" aria-hidden="true">
-      <span>
-        <u>F</u>ile
-      </span>
-      <span>
-        <u>E</u>dit
-      </span>
-      <span>
-        <u>V</u>iew
-      </span>
-      <span>
-        <u>P</u>lay
-      </span>
-      <span>
-        <u>H</u>elp
-      </span>
-    </div>
-  );
-}
-
 export function Marquee({ items }: { items: string[] }) {
   return (
     <div className="marquee" aria-hidden="true">

@@ -1,4 +1,5 @@
-import { Window, MenuBar, Marquee } from "./chrome";
+import { Window, Marquee } from "./chrome";
+import { MenuBar } from "./MenuBar";
 import { Player } from "./Player";
 import { Tabs } from "./Tabs";
 import { StatusBar } from "./StatusBar";

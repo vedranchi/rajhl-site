@@ -1,5 +1,6 @@
 import { Window } from "./chrome";
 import { TelegramIcon } from "./icons";
+import { telegramInvite, telegramMembers } from "@/data/content";
 
 /**
  * Design-only invite form. Inert: the button is type="button" and there is no
@@ -45,9 +46,9 @@ export function InviteWindow() {
           </button>
           <p className="formfine">✓ No spam · your invite arrives by email · unsubscribe anytime</p>
         </form>
-        <div className="online" aria-hidden="true">
-          <span className="odot" /> 1,204 producers inside
-        </div>
+        <a className="online" href={telegramInvite} target="_blank" rel="noopener noreferrer">
+          <span className="odot" aria-hidden="true" /> {telegramMembers} subscribers inside — open Telegram ↗
+        </a>
       </div>
     </Window>
   );

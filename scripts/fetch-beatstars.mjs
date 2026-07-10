@@ -1,17 +1,20 @@
 /**
- * One-off BeatStars catalogue fetcher for the Luka Rajhl site.
+ * BeatStars catalogue fetcher for the Luka Rajhl site.
  *
  * WHY THIS EXISTS (and why it is NOT a runtime dependency):
  * BeatStars has no documented public API. This script reads two undocumented but
  * public, unauthenticated endpoints — their Algolia search index and their v2
- * read API — the same ones their own web player calls. We run it MANUALLY to bake
- * a snapshot into `src/data/beatstars-catalogue.json`. The production site never
- * calls BeatStars, so a bundle/key change on their side can never break the live
- * site (it just means "re-run this to refresh"). This respects the CLAUDE.md rule
- * against runtime scraping while still giving real per-beat deep links.
+ * read API — the same ones their own web player calls. It runs on a schedule
+ * (GitHub Actions, see .github/workflows/refresh-catalogue.yml) or by hand and
+ * bakes a snapshot into `src/data/beatstars-catalogue.json`. The rendered site
+ * never calls BeatStars for catalogue data, so a bundle/key change on their side
+ * can only break this script, never the live site. The one client-side call is
+ * the audio-preview stream of the single most-popular beat (embed-like, optional).
  *
- * Refresh:  node scripts/fetch-beatstars.mjs
- * Then commit the regenerated JSON.
+ * Popularity = play count (`activities.play`). We publish the TOP 10 beats and up
+ * to 10 kits; the UI links out to BeatStars for the rest.
+ *
+ * Refresh:  node scripts/fetch-beatstars.mjs   (then commit the JSON)
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -20,17 +23,8 @@ import { dirname, join } from "node:path";
 const MEMBER_ID = "MR1947497"; // Luka Rajhl (beatstars.com/rajhl)
 const ALGOLIA_APP = "NMMGZJQ6QI";
 const ALGOLIA_KEY = "b3513eb709fe8f444b4d5c191b63ea47"; // public search key, from BeatStars' own web bundle
-const BEATS_COUNT = 6;
 const REFERER = "https://www.beatstars.com/";
-
-const KEY_MAP = {
-  A_MAJOR: "A maj", A_MINOR: "A min", A_SHARP_MAJOR: "A# maj", A_SHARP_MINOR: "A# min",
-  B_MAJOR: "B maj", B_MINOR: "B min", C_MAJOR: "C maj", C_MINOR: "C min",
-  C_SHARP_MAJOR: "C# maj", C_SHARP_MINOR: "C# min", D_MAJOR: "D maj", D_MINOR: "D min",
-  D_SHARP_MAJOR: "D# maj", D_SHARP_MINOR: "D# min", E_MAJOR: "E maj", E_MINOR: "E min",
-  F_MAJOR: "F maj", F_MINOR: "F min", F_SHARP_MAJOR: "F# maj", F_SHARP_MINOR: "F# min",
-  G_MAJOR: "G maj", G_MINOR: "G min", G_SHARP_MAJOR: "G# maj", G_SHARP_MINOR: "G# min",
-};
+const MAX_ITEMS = 10; // publish at most this many beats / kits; link out for the rest
 
 const j = (r) => r.json();
 const money = (n) => `$${Number(n).toFixed(0)}`;
@@ -40,18 +34,29 @@ const secs = (s) => {
   return `${m}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 };
 
-async function algolia(index, params) {
-  const r = await fetch(`https://${ALGOLIA_APP}-dsn.algolia.net/1/indexes/${index}/query`, {
-    method: "POST",
-    headers: {
-      "X-Algolia-Application-Id": ALGOLIA_APP,
-      "X-Algolia-API-Key": ALGOLIA_KEY,
-      "Content-Type": "application/json",
-      Referer: REFERER,
-    },
-    body: JSON.stringify(params),
-  });
-  return j(r);
+// Pull every hit for an index (Algolia caps hitsPerPage at 100 → paginate).
+async function algoliaAll(index) {
+  const hits = [];
+  let page = 0;
+  let nbHits = 0;
+  for (;;) {
+    const r = await fetch(`https://${ALGOLIA_APP}-dsn.algolia.net/1/indexes/${index}/query`, {
+      method: "POST",
+      headers: {
+        "X-Algolia-Application-Id": ALGOLIA_APP,
+        "X-Algolia-API-Key": ALGOLIA_KEY,
+        "Content-Type": "application/json",
+        Referer: REFERER,
+      },
+      body: JSON.stringify({ query: "", filters: `memberId:${MEMBER_ID}`, hitsPerPage: 100, page }),
+    });
+    const d = await j(r);
+    hits.push(...(d.hits ?? []));
+    nbHits = d.nbHits ?? hits.length;
+    if (page >= (d.nbPages ?? 1) - 1) break;
+    page += 1;
+  }
+  return { hits, nbHits };
 }
 
 async function detail(kind, id) {
@@ -61,75 +66,81 @@ async function detail(kind, id) {
   return (await j(r))?.response?.data?.details ?? {};
 }
 
+const plays = (h) => h?.activities?.play ?? 0;
+const numericId = (h) => h.v2Id ?? String(h.id).replace(/^[A-Z]+/, "");
+
 // Strip HTML + collapse whitespace, then clip to a short one-line descriptor.
 function blurb(html, max = 58) {
-  const text = String(html || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = String(html || "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
   if (!text) return "";
   const clipped = text.length > max ? text.slice(0, max).replace(/\s+\S*$/, "") + "…" : text;
-  // Title-case-ish: keep as-is but soften the all-caps BeatStars copy.
   return clipped.charAt(0).toUpperCase() + clipped.slice(1).toLowerCase();
 }
 
 async function main() {
-  // --- Beats: newest first from the public inventory index ---
-  const beatHits = await algolia("public_prod_inventory_track_index", {
-    query: "",
-    filters: `memberId:${MEMBER_ID}`,
-    hitsPerPage: BEATS_COUNT,
-  });
+  // --- Beats: rank ALL by plays, keep the top MAX_ITEMS ---
+  const { hits: beatHits, nbHits: beatsTotal } = await algoliaAll("public_prod_inventory_track_index");
+  const topBeats = [...beatHits].sort((a, b) => plays(b) - plays(a) || (b.activities?.sale ?? 0) - (a.activities?.sale ?? 0)).slice(0, MAX_ITEMS);
 
   const beats = [];
-  for (const [i, h] of beatHits.hits.entries()) {
-    const d = await detail("track", h.v2Id ?? h.id.replace(/^TK/, ""));
+  for (const [i, h] of topBeats.entries()) {
+    const d = await detail("track", numericId(h));
     beats.push({
       n: i === 0 ? "▶" : String(i + 1).padStart(2, "0"),
       title: h.title,
-      bpm: h.metadata?.bpm ?? d.bpm ?? 0,
-      key: KEY_MAP[h.metadata?.keyNote] ?? "",
-      // v2 `duration` is already "MM:SS"; fall back to a numeric length if needed.
       time: d.duration ?? secs(d.length),
-      price: money(h.price ?? d.price ?? 0),
+      plays: plays(h),
       buyUrl: d.beatstars_uri ?? `https://www.beatstars.com/beat/${d.title_uri}`,
       playing: i === 0,
     });
   }
 
-  // --- Kits: soundkit index → canonical /sound-kits/<title_uri> public URL ---
-  const kitHits = await algolia("public_prod_inventory_soundkit_index", {
-    query: "",
-    filters: `memberId:${MEMBER_ID}`,
-    hitsPerPage: 8,
-  });
+  // The single most-popular beat streams in the browser player.
+  const top = topBeats[0];
+  const topId = top ? numericId(top) : null;
+  const topDetail = top ? await detail("track", topId) : {};
+  const topBeat = top
+    ? {
+        title: top.title,
+        artist: "Luka Rajhl",
+        // Stable redirect endpoint → fresh signed S3 mp3 on each play (never expires).
+        stream: `https://main.v2.beatstars.com/stream?id=${topId}&return=audio`,
+        total: topDetail.duration ?? "",
+        buyUrl: topDetail.beatstars_uri ?? beats[0]?.buyUrl ?? "",
+      }
+    : null;
+
+  // --- Kits: rank by plays too, keep up to MAX_ITEMS, canonical /sound-kits/ URL ---
+  const { hits: kitHits, nbHits: kitsTotal } = await algoliaAll("public_prod_inventory_soundkit_index");
+  const topKits = [...kitHits].sort((a, b) => plays(b) - plays(a)).slice(0, MAX_ITEMS);
   const kits = [];
-  for (const h of kitHits.hits) {
-    const d = await detail("soundkit", String(h.id).replace(/^SK/, ""));
+  for (const h of topKits) {
+    const d = await detail("soundkit", numericId(h));
     const desc = blurb(d.description);
     kits.push({
       file: h.title,
       meta: desc ? `${desc} · royalty-free` : "Sound kit · royalty-free",
       price: money(h.price ?? d.price ?? 0),
-      buyUrl: d.relative_uri
-        ? `https://www.beatstars.com${d.relative_uri}`
-        : `https://www.beatstars.com/sound-kits/${d.title_uri}`,
+      buyUrl: d.relative_uri ? `https://www.beatstars.com${d.relative_uri}` : `https://www.beatstars.com/sound-kits/${d.title_uri}`,
     });
   }
 
   const out = {
     _generatedAt: new Date().toISOString(),
     _source: "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
+    _popularityMetric: "activities.play (BeatStars play count)",
     store: "https://www.beatstars.com/rajhl",
-    totals: { beats: beatHits.nbHits ?? beats.length, kits: kitHits.nbHits ?? kits.length },
+    totals: { beats: beatsTotal, kits: kitsTotal },
+    shown: { beats: beats.length, kits: kits.length },
+    topBeat,
     beats,
     kits,
   };
 
   const dest = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "beatstars-catalogue.json");
   writeFileSync(dest, JSON.stringify(out, null, 2) + "\n");
-  console.log(`Wrote ${beats.length} beats + ${kits.length} kits -> ${dest}`);
+  console.log(`Wrote top ${beats.length}/${beatsTotal} beats + ${kits.length}/${kitsTotal} kits -> ${dest}`);
+  console.log(`Now-playing: ${topBeat?.title}`);
 }
 
 main().catch((e) => {

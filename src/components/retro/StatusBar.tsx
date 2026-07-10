@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { telegramMembers } from "@/data/content";
 
 export function StatusBar({ beats, kits }: { beats: number; kits: number }) {
   const [n, setN] = useState(13290);
@@ -29,6 +30,7 @@ export function StatusBar({ beats, kits }: { beats: number; kits: number }) {
       <span className="cell">
         ♪ {beats} beats · {kits} kits
       </span>
+      <span className="cell tg-cell">✈ {telegramMembers} subs</span>
       <span className="spacer" />
       <span className="cell">EST. 2018</span>
       <span className="cell">

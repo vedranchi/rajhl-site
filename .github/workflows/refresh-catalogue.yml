@@ -1,0 +1,52 @@
+name: Refresh BeatStars catalogue
+
+# Keeps src/data/beatstars-catalogue.json in sync with BeatStars so the site's
+# top-10 beats/kits and the now-playing beat re-rank automatically as play counts
+# change (and new kits appear until the cap of 10). Runs the same script you'd run
+# locally — the live site still never calls BeatStars itself.
+#
+# NOTE: scheduled workflows only fire from the DEFAULT branch's copy of this file.
+# It checks out + pushes to `test-prod` (the current deploy branch). When a
+# production branch is finalised in Vercel, change `BRANCH` below to match.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch: {}
+
+concurrency:
+  group: refresh-catalogue
+  cancel-in-progress: true
+
+env:
+  BRANCH: test-prod
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # LTS; the script uses only Node builtins + global fetch
+
+      - name: Fetch latest catalogue
+        run: node scripts/fetch-beatstars.mjs
+
+      - name: Commit if the catalogue changed
+        run: |
+          if git diff --quiet -- src/data/beatstars-catalogue.json; then
+            echo "No catalogue changes."
+            exit 0
+          fi
+          git config user.name "catalogue-bot"
+          git config user.email "actions@github.com"
+          git add src/data/beatstars-catalogue.json
+          git commit -m "chore(data): refresh BeatStars catalogue (auto)"
+          git push origin HEAD:${{ env.BRANCH }}

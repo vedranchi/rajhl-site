@@ -2,17 +2,17 @@
  * Site content for the Luka Rajhl retro landing.
  *
  * Beats & kits are a real BeatStars snapshot: `src/data/beatstars-catalogue.json`
- * (regenerate with `node scripts/fetch-beatstars.mjs`). Everything else is authored
- * here until it moves to Payload CMS.
+ * (regenerate with `node scripts/fetch-beatstars.mjs`; auto-refreshed on a schedule
+ * by .github/workflows/refresh-catalogue.yml). Everything else is authored here
+ * until it moves to Payload CMS.
  */
 import catalogue from "./beatstars-catalogue.json";
 
 export type Beat = {
   n: string;
   title: string;
-  bpm: number;
-  key: string;
   time: string;
+  plays: number;
   buyUrl: string;
   playing?: boolean;
 };
@@ -42,21 +42,25 @@ export const marqueeItems: string[] = [
   "MADE IN SKOPJE",
 ];
 
-/** BeatStars store root + private Telegram group invite. */
+/** BeatStars store root + private Telegram group. */
 export const beatstarsStore = catalogue.store;
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
+export const telegramMembers = "1,230+";
 
-/** Real BeatStars catalogue (snapshot — see scripts/fetch-beatstars.mjs). */
+/** Real BeatStars catalogue (top-10 snapshot — see scripts/fetch-beatstars.mjs). */
 export const beats: Beat[] = catalogue.beats;
 export const kits: Kit[] = catalogue.kits;
-/** Full store totals (the tabs show a featured subset). */
+/** Full store totals (the page shows the most-popular subset). */
 export const catalogueTotals = catalogue.totals;
+export const catalogueShown = catalogue.shown;
+export const hasMoreBeats = catalogueTotals.beats > catalogueShown.beats;
+export const hasMoreKits = catalogueTotals.kits > catalogueShown.kits;
 
 export const socials: Social[] = [
   { name: "BeatStars", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
   { name: "YouTube", sub: "Type beats & breakdowns", handle: "@lukarajhl", url: "https://www.youtube.com/@lukarajhl", icon: "youtube" },
   { name: "Instagram", sub: "Studio & snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
-  { name: "Telegram", sub: "Free loops + first listens", handle: "Private group", url: telegramInvite, icon: "telegram" },
+  { name: "Telegram", sub: `Free loops · ${telegramMembers} subscribers`, handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */
@@ -75,15 +79,18 @@ export const spotifyPlaylist = {
 };
 
 /**
- * Placeholder audio for the transport player — a self-contained retro loop so the
- * controls are testable offline. TODO: swap for an NCS track or Luka's own preview
- * by dropping a file in /public/audio and updating `src`/`title`/`total`.
+ * Browser transport player. Primary source = the most-popular beat streamed from
+ * BeatStars (a client-side preview, embed-like). `fallbackSrc` is a self-contained
+ * retro loop used if the stream fails to load, so the player always works.
  */
+const top = catalogue.topBeat;
 export const nowPlaying = {
-  title: "Retro Test Loop",
-  artist: "Placeholder — swap for NCS",
-  src: "/audio/placeholder-loop.wav",
-  total: "0:15",
+  title: top?.title ?? "Retro Test Loop",
+  artist: top?.artist ?? "Luka Rajhl",
+  src: top?.stream ?? "/audio/placeholder-loop.wav",
+  fallbackSrc: "/audio/placeholder-loop.wav",
+  total: top?.total || "0:15",
+  buyUrl: top?.buyUrl ?? beatstarsStore,
 };
 
 export const about = {
