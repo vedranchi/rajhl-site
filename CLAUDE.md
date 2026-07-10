@@ -37,18 +37,33 @@ system, below).
 - **BeatStars has NO *documented* public API.** Sales/analytics data = **CSV import / manual
   only**. **Never scrape at runtime** (ToS + fragility) — the live site must make zero calls
   to BeatStars.
-- **Catalogue deep-links (done 2026-07-10):** there IS an undocumented but public,
-  unauthenticated read path — their **Algolia search index** (app `NMMGZJQ6QI`, index
+- **Catalogue deep-links + popularity (done 2026-07-10):** there IS an undocumented but
+  public, unauthenticated read path — their **Algolia search index** (app `NMMGZJQ6QI`, index
   `public_prod_inventory_track_index` / `…_soundkit_index`, filter `memberId:MR1947497`,
-  `Referer: https://www.beatstars.com/` required) plus the **v2 read API**
-  (`https://main.v2.beatstars.com/track?id=` / `…/soundkit?id=`) for canonical URLs.
-  We use these **build-time only**, via `scripts/fetch-beatstars.mjs`, to bake a snapshot
-  into `src/data/beatstars-catalogue.json` (real per-beat `/beat/<slug>` + per-kit
-  `/sound-kits/<slug>` links, BPM, key, duration, price). Re-run the script to refresh;
-  commit the JSON. **Do not** call these endpoints from the app at request time.
+  `Referer: https://www.beatstars.com/` required, **caps at 100 hits/page → paginate**) plus
+  the **v2 read API** (`https://main.v2.beatstars.com/track?id=` / `…/soundkit?id=`) for
+  canonical URLs. Each Algolia hit carries `activities.{play,sale,like}` — **popularity =
+  `activities.play`**. `scripts/fetch-beatstars.mjs` pages through all items, ranks by plays,
+  and bakes the **top 10** beats + up to 10 kits into `src/data/beatstars-catalogue.json`
+  (real `/beat/<slug>` + `/sound-kits/<slug>` links, duration, price, play count). Re-run to
+  refresh; commit the JSON. **Never** call these endpoints from the app at request time.
   Gotchas: the `bsta.rs/k/<id>/` kit short-link redirects to a *private* pro-page — use the
   v2 `relative_uri` (`/sound-kits/<slug>`) instead; Algolia rejects requests without the
   Referer header.
+- **Auto-refresh:** `.github/workflows/refresh-catalogue.yml` runs the fetch script every 6h
+  (+ manual dispatch), commits the JSON if it changed, and pushes to `test-prod` → Vercel
+  redeploys. This is how the top-10 re-ranks automatically as plays change / new kits appear.
+  **Scheduled workflows only fire from the DEFAULT branch's copy of the file** — it activates
+  once `test-prod` merges to `main`; until then use *Run workflow*. Update `BRANCH` when the
+  Vercel production branch is finalised. The UI shows only the top 10; a **"Browse all N on
+  BeatStars" CTA** (`.browseall`) links out for the rest — this is the "clean hand-off."
+- **Browser audio = the most-popular beat.** The stable redirect endpoint
+  `https://main.v2.beatstars.com/stream?id=<numericId>&return=audio` 302s to a fresh signed
+  S3 mp3 each request (so it never expires). The transport plays it as **plain opaque
+  cross-origin media — do NOT set `crossOrigin`** (the S3 leg has no CORS headers; requiring
+  CORS would break playback). This one client-side call to BeatStars is embed-like (a preview,
+  like the Spotify iframe), the sole exception to "the site never calls BeatStars." The
+  synthesized loop is the **fallback** if the stream errors.
 - **Instagram Graph API** needs a **Business/Creator account + linked Facebook Page + Meta app
   review**. Treat as conditional; manual fallback. (Instagram Basic Display was deprecated.)
 - **YouTube:** public stats via Data API v3 (API key); private metrics (watch time, revenue)
@@ -79,10 +94,20 @@ system, below).
   tab) — no API key needed, works with Spotify's CSP. Don't proxy or scrape Spotify.
 - **Transport player is real:** `src/components/retro/Player.tsx` (client) drives an
   `<audio>` element with live seek/elapsed, and plays a short synthesized **Web Audio**
-  "retro blip" on every control press (square-wave chiptune, no asset). Placeholder track is
-  a self-contained 15s synthesized loop at `public/audio/placeholder-loop.wav` (no ffmpeg /
-  NCS hotlink available offline) — swap for a real NCS track or Luka's own preview by
-  dropping a file in `public/audio` and updating `nowPlaying` in `content.ts`.
+  "retro blip" on every control press (square-wave chiptune, no asset). Source = the
+  most-popular BeatStars beat (streamed, see above); the 15s synthesized loop at
+  `public/audio/placeholder-loop.wav` is the fallback. The **File/Play menu** can drive it
+  via the `lr:toggle-play` window CustomEvent.
+- **Menu bar is interactive** (`src/components/retro/MenuBar.tsx`, client): File (open
+  store/Spotify), Edit (copy links → toast), View (toggle CRT scanlines / vaporwave grid via
+  `body.no-scanlines` / `body.no-grid` classes), Play (drive transport), Help (retro About
+  modal). The scanlines/grid are togglable because the grid moved to `body::before` and
+  scanlines stay on `body::after`. Hidden on mobile.
+- **Beats table:** no BPM/Key columns (client asked to drop them); shows rank · title ·
+  **play count** · time · license, top-10 only.
+- **React 19 lint is strict:** `react-hooks/refs` forbids reading a `ref.current` in any
+  function reachable from render (even handlers) — use effects/state instead;
+  `react-hooks/purity` forbids `Date.now()`/`new Date()` in render — hoist to module scope.
 
 ### Build / ops
 - **Payload on Vercel is serverless — no local disk.** Use the Postgres adapter (Supabase) +

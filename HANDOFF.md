@@ -38,25 +38,38 @@
   `7JRpQCqP4BIrO0Wk35MaMD` is embedded via the official iframe in its own **SpotifyWindow
   beside the invite form** (`.bottomrow`) — no longer a tab (client changed their mind).
   The four Channels badges (Subscribe/Follow/Join/BeatStars) are now real outbound links.
-- **BeatStars catalogue is REAL now (DONE 2026-07-10):** discovered BeatStars' undocumented
-  public read path (Algolia search index + `main.v2` API — see CLAUDE.md for creds/gotchas).
-  `scripts/fetch-beatstars.mjs` pulls a snapshot into `src/data/beatstars-catalogue.json`
-  (6 featured beats + all 4 sound kits, with real titles/BPM/key/duration/price and
-  **real per-item deep links** — `/beat/<slug>`, `/sound-kits/<slug>`). Clicking BUY/GET now
-  lands on the exact BeatStars listing. Store totals (227 beats · 4 kits) show in the status
-  bar. **Build-time only** — the live site never calls BeatStars; re-run the script to
-  refresh. `content.ts` now sources beats/kits from that JSON.
-- **Working audio player (DONE 2026-07-10):** `Player.tsx` drives a real `<audio>` with live
-  seek/elapsed; transport buttons emit a synthesized Web-Audio "retro blip". Placeholder =
-  a self-contained 15s chiptune loop (`public/audio/placeholder-loop.wav`) — swap for a real
-  NCS track / Luka preview later (couldn't hotlink NCS or synth an mp3 offline).
-- **Retro color pass (DONE 2026-07-10):** phosphor-amber readouts (marquee/counter/
-  transport time), magenta titlebar tail + bottom horizon glow, `--led` green token.
-- **Next up:** (1) import repo into Vercel → `test-prod` preview URL for sign-off; (2) swap
-  the placeholder song for a real track; optionally expand the featured-beats count or add a
-  BeatStars embed; (3) once Supabase exists, fill env → migrations → first admin user →
-  point the public page at Payload instead of `content.ts` (and move the catalogue sync into
-  a Payload job/cron if the client wants auto-refresh).
+- **BeatStars catalogue — REAL + auto-ranked (DONE 2026-07-10):** discovered BeatStars'
+  undocumented public read path (Algolia + `main.v2` API — see CLAUDE.md for creds/gotchas).
+  `scripts/fetch-beatstars.mjs` pages through **all 227 beats**, ranks by **play count**
+  (`activities.play`), and bakes the **top 10** beats + all 4 kits into
+  `src/data/beatstars-catalogue.json` with real per-item deep links, durations, prices, and
+  play counts. BUY/GET land on the exact listing. **Auto-refresh:**
+  `.github/workflows/refresh-catalogue.yml` re-runs every 6h and commits/pushes changes to
+  `test-prod` → Vercel redeploys, so the top-10 re-ranks as popularity shifts (and new kits
+  appear until the cap of 10). ⚠ Scheduled runs only fire once the workflow file is on the
+  **default branch (`main`)** — until `test-prod`→`main` merges, trigger it via *Run
+  workflow*. The UI shows only 10; a **"Browse all N on BeatStars" CTA** links out for the
+  rest.
+- **Front-page catalogue trimmed (DONE 2026-07-10):** removed the **BPM & Key** columns
+  (client request); beats now show rank · title · **plays** · time · license. Status bar
+  shows real totals (**227 beats · 4 kits · 1,230+ subs**).
+- **Working audio player = the top beat (DONE 2026-07-10):** `Player.tsx` streams the
+  **most-popular beat** from BeatStars (`/stream?id=&return=audio`, plain opaque cross-origin
+  — no `crossOrigin` attr), with live seek/elapsed and a synthesized Web-Audio "retro blip"
+  on each button. The 15s chiptune loop (`public/audio/placeholder-loop.wav`) is the
+  **fallback** if the stream errors.
+- **Interactive menu bar (DONE 2026-07-10):** `MenuBar.tsx` — File (open store/Spotify),
+  Edit (copy links → toast), View (toggle CRT scanlines / vaporwave grid), Play (drive the
+  transport via a window event), Help (retro About modal). Channels badges + the invite
+  window's "1,230+ subscribers" are live links.
+- **Retro color pass (DONE 2026-07-10):** phosphor-amber readouts, magenta titlebar tail +
+  bottom horizon glow, `--led` green token.
+- **Next up:** (1) import repo into Vercel → `test-prod` preview URL for sign-off; once
+  merged to `main`, confirm the refresh workflow's scheduled runs fire (set repo Actions
+  write perms) and point `BRANCH` at the prod branch; (2) optionally set the real Telegram
+  subscriber count if it drifts from 1,230+; (3) once Supabase exists, fill env → migrations
+  → first admin user → point the page at Payload instead of `content.ts` (could move the
+  catalogue sync into a Payload job then).
 - **Blocked on:** client inputs (domain, brand assets, copy, BeatStars/social URLs, Supabase
   project, Claude API key) — see **Inputs needed**.
 
