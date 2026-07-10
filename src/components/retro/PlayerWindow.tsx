@@ -1,8 +1,9 @@
-import { Window, MenuBar, Marquee, Transport } from "./chrome";
+import { Window, MenuBar, Marquee } from "./chrome";
+import { Player } from "./Player";
 import { Tabs } from "./Tabs";
 import { StatusBar } from "./StatusBar";
-import { BeatsPanel, KitsPanel, PlaylistPanel, ChannelsPanel, AboutPanel } from "./panels";
-import { marqueeItems, nowPlaying } from "@/data/content";
+import { BeatsPanel, KitsPanel, ChannelsPanel, AboutPanel } from "./panels";
+import { marqueeItems, catalogueTotals } from "@/data/content";
 
 export function PlayerWindow() {
   return (
@@ -13,18 +14,12 @@ export function PlayerWindow() {
         tabs={[
           { id: "beats", label: "▶ Beats", content: <BeatsPanel /> },
           { id: "kits", label: "◆ Kits", content: <KitsPanel /> },
-          { id: "playlist", label: "♫ Playlist", content: <PlaylistPanel /> },
           { id: "ch", label: "✦ Channels", content: <ChannelsPanel /> },
           { id: "about", label: "☺ About", content: <AboutPanel /> },
         ]}
       />
-      <Transport
-        title={nowPlaying.title}
-        artist={nowPlaying.artist}
-        elapsed={nowPlaying.elapsed}
-        total={nowPlaying.total}
-      />
-      <StatusBar beats={24} kits={3} />
+      <Player />
+      <StatusBar beats={catalogueTotals.beats} kits={catalogueTotals.kits} />
     </Window>
   );
 }

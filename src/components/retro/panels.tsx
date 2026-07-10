@@ -1,4 +1,4 @@
-import { beats, kits, socials, about, spotifyPlaylist } from "@/data/content";
+import { beats, kits, socials, about, channelBadges } from "@/data/content";
 import { SocialIcon } from "./icons";
 
 /** Real external links open in a new tab; "#" placeholders stay in-page. */
@@ -97,37 +97,13 @@ export function ChannelsPanel() {
           </a>
         ))}
       </div>
-      <div className="badges" aria-hidden="true">
-        <span className="badge88">SUBSCRIBE ►</span>
-        <span className="badge88">FOLLOW ★</span>
-        <span className="badge88">JOIN ✈</span>
-        <span className="badge88">BEATSTARS ♪</span>
+      <div className="badges">
+        {channelBadges.map((b) => (
+          <a className="badge88" href={b.url} key={b.label} target="_blank" rel="noopener noreferrer">
+            {b.label}
+          </a>
+        ))}
       </div>
-    </>
-  );
-}
-
-export function PlaylistPanel() {
-  return (
-    <>
-      <h2 className="blocktitle">♫ Now Spinning \ curated_rotation.pls</h2>
-      <div className="spotifybox">
-        <iframe
-          title="Spotify playlist — Luka Rajhl"
-          src={spotifyPlaylist.embedUrl}
-          width="100%"
-          height="420"
-          style={{ border: 0, display: "block" }}
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-        />
-      </div>
-      <p className="listhint">
-        » Streaming via Spotify ·{" "}
-        <a className="hintlink" href={spotifyPlaylist.openUrl} {...ext(spotifyPlaylist.openUrl)}>
-          open the full playlist ↗
-        </a>
-      </p>
     </>
   );
 }

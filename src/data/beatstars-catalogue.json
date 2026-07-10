@@ -1,0 +1,97 @@
+{
+  "_generatedAt": "2026-07-10T21:33:03.694Z",
+  "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
+  "store": "https://www.beatstars.com/rajhl",
+  "totals": {
+    "beats": 227,
+    "kits": 4
+  },
+  "beats": [
+    {
+      "n": "▶",
+      "title": "fakemink + feng + 2016 type beat - \"hashtag\"",
+      "bpm": 100,
+      "key": "G# min",
+      "time": "02:38",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-2016-type-beat-hashtag-25007201",
+      "playing": true
+    },
+    {
+      "n": "02",
+      "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
+      "bpm": 93,
+      "key": "F# min",
+      "time": "03:02",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
+      "playing": false
+    },
+    {
+      "n": "03",
+      "title": "fakemink + feng type beat - \"on the line\"",
+      "bpm": 97,
+      "key": "F min",
+      "time": "01:24",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
+      "playing": false
+    },
+    {
+      "n": "04",
+      "title": "fakemink + suzy sheer + snow strippers type beat \"leave now\"",
+      "bpm": 124,
+      "key": "F# min",
+      "time": "02:21",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
+      "playing": false
+    },
+    {
+      "n": "05",
+      "title": "fakemink + feng type beat - \"why did you leave?\"",
+      "bpm": 85,
+      "key": "C min",
+      "time": "01:33",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
+      "playing": false
+    },
+    {
+      "n": "06",
+      "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
+      "bpm": 142,
+      "key": "G min",
+      "time": "02:05",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
+      "playing": false
+    }
+  ],
+  "kits": [
+    {
+      "file": "SEPIA SOUND KIT",
+      "meta": "The sounds behind my uk underground beats. used to create… · royalty-free",
+      "price": "$25",
+      "buyUrl": "https://www.beatstars.com/sound-kits/sepia-sound-kit-273403"
+    },
+    {
+      "file": "#LSK SOUND KIT",
+      "meta": "A sound kit that i use daily to create nostalgic 2016… · royalty-free",
+      "price": "$20",
+      "buyUrl": "https://www.beatstars.com/sound-kits/lsk-sound-kit-266990"
+    },
+    {
+      "file": "LUKARAJHL STASH KIT",
+      "meta": "A stash kit that i use daily to create electronic /… · royalty-free",
+      "price": "$20",
+      "buyUrl": "https://www.beatstars.com/sound-kits/lukarajhl-stash-kit-261066"
+    },
+    {
+      "file": "BUNDLE KIT (#LSK SOUND KIT + LUKARAJHL STASH KIT)",
+      "meta": "A complete production bundle featuring every sound i use… · royalty-free",
+      "price": "$30",
+      "buyUrl": "https://www.beatstars.com/sound-kits/bundle-kit-lsk-sound-kit--lukarajhl-stash-kit-268177"
+    }
+  ]
+}
