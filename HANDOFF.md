@@ -32,10 +32,19 @@
   *Reduce motion* being ON — the old CSS killed **all** animation under
   `prefers-reduced-motion`. Softened in `globals.css`: now only the marquee crawl + seek-bar
   respect the preference; blink + EQ bars stay. (User can also toggle the OS setting off.)
-- **Next up:** (1) run `pnpm build` and fix any Payload/Next-16 fallout; (2) import repo into
-  Vercel (dashboard, GitHub already connected) → `test-prod` preview URL for sign-off;
-  (3) swap in Luka's real content; (4) once Supabase exists, fill env → run migrations →
-  create the first admin user → point the public page at Payload instead of `content.ts`.
+- **Links + Spotify (DONE 2026-07-10):** client's real URLs are wired in — YouTube
+  `youtube.com/@lukarajhl`, Instagram `instagram.com/luka.rajhl`, BeatStars
+  `beatstars.com/rajhl` (also the target of every BUY/GET button until per-beat links
+  arrive). New **"♫ Playlist" tab** embeds Spotify playlist `7JRpQCqP4BIrO0Wk35MaMD`
+  via the official iframe embed. Telegram link still placeholder. `channels` collection
+  gained a `beatstars` icon option to stay in sync with the UI.
+- **Retro color pass (DONE 2026-07-10):** phosphor-amber readouts (marquee/counter/
+  transport time), magenta titlebar tail + bottom horizon glow, `--led` green token.
+  Tokens recorded in CLAUDE.md.
+- **Next up:** (1) import repo into Vercel (dashboard, GitHub already connected) →
+  `test-prod` preview URL for sign-off; (2) swap in Luka's real beats/kits content +
+  Telegram link; (3) once Supabase exists, fill env → run migrations → create the first
+  admin user → point the public page at Payload instead of `content.ts`.
 - **Blocked on:** client inputs (domain, brand assets, copy, BeatStars/social URLs, Supabase
   project, Claude API key) — see **Inputs needed**.
 
@@ -168,8 +177,10 @@
 - **Domain** (own `lukarajhl.com`? registrar access) or buy one.
 - **Brand assets:** logo, photos, reference sites, any color tweaks.
 - **Copy:** bio/artist statement, tagline, genre descriptors.
-- **Links:** BeatStars store (+ per-beat URLs), where kits are sold, YouTube channel,
-  Instagram handle, Telegram channel.
+- **Links:** ~~BeatStars store, YouTube channel, Instagram handle~~ **received 2026-07-10**
+  (beatstars.com/rajhl · youtube.com/@lukarajhl · instagram.com/luka.rajhl · Spotify playlist
+  `7JRpQCqP4BIrO0Wk35MaMD`). Still needed: **per-beat/per-kit BeatStars URLs**, where kits
+  are sold, **Telegram channel link**.
 - **Supabase project** (create → `DATABASE_URL` + keys) for Payload/DB.
 - **Phase 2:** Instagram account type (Business/Creator?), YouTube OAuth willingness,
   BeatStars CSV export, **Claude API key** + budget.

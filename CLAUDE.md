@@ -55,6 +55,14 @@ system, below).
   `#9A98A3` · accent `#8B7CC8` · deep `#5B4B8A` · glow `#A594E0` · hairline
   `rgba(255,255,255,.08)`. Retro extras: bevel-light `rgba(255,255,255,.13)`, bevel-dark
   `rgba(0,0,0,.62)`, line `#050506`, well `#101014`.
+- **Retro accent pass (2026-07-10, user-approved):** phosphor-amber `#E6B45A` for LED-style
+  readouts (marquee, visitor counter, transport time), vaporwave magenta `#A66FB5` as the
+  titlebar-gradient tail + a faint bottom "horizon" glow, LED green tokenized as `--led`
+  `#7FE0A4`. Amber/magenta are *readout/tint* colors only — violet stays the primary accent;
+  still no light themes.
+- **Spotify:** playlist embedded via the official iframe
+  (`open.spotify.com/embed/playlist/<id>`) in a dedicated "♫ Playlist" tab — no API key
+  needed, works with Spotify's CSP. Don't proxy or scrape Spotify.
 
 ### Build / ops
 - **Payload on Vercel is serverless — no local disk.** Use the Postgres adapter (Supabase) +
