@@ -31,6 +31,7 @@ export const Channels: CollectionConfig = {
         { label: "YouTube", value: "youtube" },
         { label: "Instagram", value: "instagram" },
         { label: "Telegram", value: "telegram" },
+        { label: "BeatStars", value: "beatstars" },
       ],
     },
     {

@@ -1,5 +1,12 @@
-import { beats, kits, socials, about } from "@/data/content";
+import { beats, kits, socials, about, spotifyPlaylist } from "@/data/content";
 import { SocialIcon } from "./icons";
+
+/** Real external links open in a new tab; "#" placeholders stay in-page. */
+function ext(url: string) {
+  return url.startsWith("http")
+    ? { target: "_blank" as const, rel: "noopener noreferrer" }
+    : {};
+}
 
 export function BeatsPanel() {
   return (
@@ -36,7 +43,7 @@ export function BeatsPanel() {
             <span className="mut">{b.bpm}</span>
             <span className="mut r-key">{b.key}</span>
             <span className="mut">{b.time}</span>
-            <a className="buy" href={b.buyUrl}>
+            <a className="buy" href={b.buyUrl} {...ext(b.buyUrl)}>
               [BUY ↗]
             </a>
           </div>
@@ -61,7 +68,7 @@ export function KitsPanel() {
             </div>
             <span className="spacer" />
             <span className="kmeta">{k.price}</span>
-            <a className="btn accent" href={k.buyUrl}>
+            <a className="btn accent" href={k.buyUrl} {...ext(k.buyUrl)}>
               GET
             </a>
           </div>
@@ -78,7 +85,7 @@ export function ChannelsPanel() {
       <h2 className="blocktitle">&gt; My Links</h2>
       <div className="links">
         {socials.map((s) => (
-          <a className="linkbtn" href={s.url} key={s.name}>
+          <a className="linkbtn" href={s.url} key={s.name} {...ext(s.url)}>
             <span className="g">
               <SocialIcon kind={s.icon} />
             </span>
@@ -96,6 +103,31 @@ export function ChannelsPanel() {
         <span className="badge88">JOIN ✈</span>
         <span className="badge88">BEATSTARS ♪</span>
       </div>
+    </>
+  );
+}
+
+export function PlaylistPanel() {
+  return (
+    <>
+      <h2 className="blocktitle">♫ Now Spinning \ curated_rotation.pls</h2>
+      <div className="spotifybox">
+        <iframe
+          title="Spotify playlist — Luka Rajhl"
+          src={spotifyPlaylist.embedUrl}
+          width="100%"
+          height="420"
+          style={{ border: 0, display: "block" }}
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        />
+      </div>
+      <p className="listhint">
+        » Streaming via Spotify ·{" "}
+        <a className="hintlink" href={spotifyPlaylist.openUrl} {...ext(spotifyPlaylist.openUrl)}>
+          open the full playlist ↗
+        </a>
+      </p>
     </>
   );
 }
@@ -118,7 +150,7 @@ export function AboutPanel() {
             ))}
             <div className="srow">
               <span className="sk">Status</span>
-              <span className="sv" style={{ color: "#7fe0a4" }}>
+              <span className="sv" style={{ color: "var(--led)" }}>
                 ● {about.status}
               </span>
             </div>

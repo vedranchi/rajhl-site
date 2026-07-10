@@ -1,7 +1,7 @@
 import { Window, MenuBar, Marquee, Transport } from "./chrome";
 import { Tabs } from "./Tabs";
 import { StatusBar } from "./StatusBar";
-import { BeatsPanel, KitsPanel, ChannelsPanel, AboutPanel } from "./panels";
+import { BeatsPanel, KitsPanel, PlaylistPanel, ChannelsPanel, AboutPanel } from "./panels";
 import { marqueeItems, nowPlaying } from "@/data/content";
 
 export function PlayerWindow() {
@@ -13,6 +13,7 @@ export function PlayerWindow() {
         tabs={[
           { id: "beats", label: "▶ Beats", content: <BeatsPanel /> },
           { id: "kits", label: "◆ Kits", content: <KitsPanel /> },
+          { id: "playlist", label: "♫ Playlist", content: <PlaylistPanel /> },
           { id: "ch", label: "✦ Channels", content: <ChannelsPanel /> },
           { id: "about", label: "☺ About", content: <AboutPanel /> },
         ]}
