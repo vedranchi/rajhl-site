@@ -359,7 +359,10 @@ h2.blocktitle { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppe
   .menubar { display: none; }
 }
 
+/* Reduced-motion: honor the preference for genuinely large/sustained motion
+   (the horizontal marquee scroll) but keep the small retro touches — the
+   blinking cursor and EQ bars are tiny, in-place, and part of the identity. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; }
-  .marquee > span { padding-left: 0; }
+  .marquee > span { animation: none !important; padding-left: 0; }
+  .seek .fill, .seek .knob { animation: none !important; }
 }

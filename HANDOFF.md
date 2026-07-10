@@ -23,9 +23,19 @@
   API — never pushed to directly). `test-prod` = working/dev branch (all commits land here;
   merge to `main` via PR). Author is **Vedran Chichov** — *no Claude co-author footer* (user
   instruction, overrides CLAUDE.md's footer rule).
-- **Next up:** import repo into Vercel (dashboard, GitHub already connected) → `test-prod`
-  gets a preview URL for sign-off → swap in Luka's real content → add Payload + Supabase
-  (needs the client's Supabase project).
+- **Payload CMS (SCAFFOLDED + BUILD VERIFIED):** Payload 3.85 is installed and wired into the
+  Next app. Collections + global + admin/API routes committed (see "Payload state" below).
+  Reads all creds from env, so it stays dormant until the client's Supabase keys land.
+  `pnpm build` ✓ and `pnpm lint` ✓ — routes: `/` static, `/admin/[[...segments]]` +
+  `/api/[...slug]` + `/api/graphql` + `/api/graphql-playground` dynamic.
+- **Desktop-animation fix (DONE):** the "no animation on desktop" report was macOS
+  *Reduce motion* being ON — the old CSS killed **all** animation under
+  `prefers-reduced-motion`. Softened in `globals.css`: now only the marquee crawl + seek-bar
+  respect the preference; blink + EQ bars stay. (User can also toggle the OS setting off.)
+- **Next up:** (1) run `pnpm build` and fix any Payload/Next-16 fallout; (2) import repo into
+  Vercel (dashboard, GitHub already connected) → `test-prod` preview URL for sign-off;
+  (3) swap in Luka's real content; (4) once Supabase exists, fill env → run migrations →
+  create the first admin user → point the public page at Payload instead of `content.ts`.
 - **Blocked on:** client inputs (domain, brand assets, copy, BeatStars/social URLs, Supabase
   project, Claude API key) — see **Inputs needed**.
 
@@ -96,13 +106,52 @@
 - [ ] Deploy a Vercel preview for sign-off + swap in Luka's real content.
 
 **Milestone 3 — Beats/Kits + CMS**
-- [ ] Add Payload 3 (Postgres adapter → Supabase; Supabase Storage adapter for uploads);
-  admin at `/admin`.
-- [ ] Collections: `beats`, `kits`, `media`, `users`; global `siteSettings` (bio, tagline,
-  socials, SEO).
+- [x] Add Payload 3 (Postgres adapter → Supabase; S3/Supabase Storage adapter for uploads);
+  admin at `/admin`. **Scaffolded — see "Payload state" below.**
+- [x] Collections: `beats`, `kits`, `channels`, `media`, `users`; global `site-settings`
+  (status, bio, specs, marquee, now-playing).
+- [x] **`pnpm build` + `pnpm lint` pass** with Payload wired in (Next 16 + Payload 3.85).
+- [ ] Wire the public `/` page to read from Payload (via Local API) instead of
+  `src/data/content.ts` — currently still reads the placeholder file.
 - [ ] `/beats` custom browser (cover, BPM, key, tags, audio preview, "License on BeatStars"
   deep-link) + optional BeatStars embed. `/kits` (cover, demo, contents, price, buy link).
 - [ ] SEO plumbing: metadata, OG images (`next/og`), sitemap, robots, schema.org.
+
+**Payload state (scaffolded 2026-07-10 — reference for the next session)**
+- **Packages:** `payload`, `@payloadcms/next`, `@payloadcms/db-postgres`,
+  `@payloadcms/richtext-lexical`, `@payloadcms/storage-s3`, `sharp`, `graphql` — all `3.85.2`.
+- **Files added:**
+  - `src/payload.config.ts` — postgres adapter (`DATABASE_URL`), lexical editor, sharp; the
+    S3 storage plugin is **conditional** (only enabled when all `S3_*` env vars are present,
+    else falls back to local disk) — `forcePathStyle: true` for Supabase.
+  - `src/collections/{Beats,Kits,Channels,Media,Users}.ts` — mirror `content.ts` shapes;
+    catalogue collections have `read: () => true` (public), `order`/`published` sidebar fields.
+  - `src/globals/SiteSettings.ts` — `status`, `bio`, `specs[]`, `marquee[]`, `nowPlaying`.
+  - `src/app/(payload)/` route group — `layout.tsx`, `custom.scss`, `admin/[[...segments]]/`
+    (`page.tsx`, `not-found.tsx`), `admin/importMap.js`, `api/[...slug]`, `api/graphql`,
+    `api/graphql-playground`.
+  - `next.config.ts` wrapped with `withPayload`. `tsconfig.json` gained the `@payload-config`
+    path alias. `package.json` gained `generate:types` / `generate:importmap` / `payload`.
+  - `.env` (gitignored) with a generated `PAYLOAD_SECRET` + empty DB/S3 keys; `.env.example`
+    documents them. `pnpm-workspace.yaml` now also approves the `esbuild` build script.
+- **Build fixes applied (Next 16 + Payload 3.85):**
+  - `api/graphql/route.ts` exports **only** `GRAPHQL_POST` — 3.85's `@payloadcms/next/routes`
+    has no `GRAPHQL_OPTIONS` (the boilerplate that ships elsewhere references it and won't
+    compile here).
+  - **sharp pinned to `0.34.2`** and passed as `sharp as unknown as SharpDependency` in
+    `payload.config.ts`. sharp's overloaded default export isn't structurally assignable to
+    Payload's single-signature `SharpDependency` type — a declaration-only friction; the value
+    is a valid sharp instance at runtime. (Don't "fix" by removing the cast.)
+- **GOTCHA — Payload CLI fails on Node 25:** `pnpm generate:importmap` / `generate:types`
+  throw `ERR_REQUIRE_ASYNC_MODULE` (tsx `require()`-ing an ESM graph with top-level await).
+  Next's own bundler is unaffected, so this only blocks the CLI codegen, not the build.
+  Workaround: run those two scripts under **Node 20/22 LTS** (e.g. `nvm use 22`). For now the
+  `admin/importMap.js` was hand-written **empty** (valid — there are no custom components yet);
+  regenerate it after adding any custom admin component. `payload-types.ts` not generated yet
+  (TS DX only; nothing imports it — generate on LTS when convenient).
+- **Still dormant until Supabase exists:** no `DATABASE_URL`/`S3_*` keys → `/admin` won't
+  function and no tables exist. When keys arrive: fill `.env`, `pnpm dev`, Payload auto-creates
+  the schema (dev push), then create the first admin user at `/admin`.
 
 **Launch**
 - [ ] QA via the `pre-launch-checklist` note; Lighthouse ≥ 90; a11y; deploy to Vercel;
