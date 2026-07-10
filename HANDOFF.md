@@ -32,19 +32,31 @@
   *Reduce motion* being ON — the old CSS killed **all** animation under
   `prefers-reduced-motion`. Softened in `globals.css`: now only the marquee crawl + seek-bar
   respect the preference; blink + EQ bars stay. (User can also toggle the OS setting off.)
-- **Links + Spotify (DONE 2026-07-10):** client's real URLs are wired in — YouTube
+- **Links + Spotify (DONE 2026-07-10):** client's real URLs are wired — YouTube
   `youtube.com/@lukarajhl`, Instagram `instagram.com/luka.rajhl`, BeatStars
-  `beatstars.com/rajhl` (also the target of every BUY/GET button until per-beat links
-  arrive). New **"♫ Playlist" tab** embeds Spotify playlist `7JRpQCqP4BIrO0Wk35MaMD`
-  via the official iframe embed. Telegram link still placeholder. `channels` collection
-  gained a `beatstars` icon option to stay in sync with the UI.
+  `beatstars.com/rajhl`, **Telegram invite `t.me/+nfPjj9ktvsYwMWVk`**. Spotify playlist
+  `7JRpQCqP4BIrO0Wk35MaMD` is embedded via the official iframe in its own **SpotifyWindow
+  beside the invite form** (`.bottomrow`) — no longer a tab (client changed their mind).
+  The four Channels badges (Subscribe/Follow/Join/BeatStars) are now real outbound links.
+- **BeatStars catalogue is REAL now (DONE 2026-07-10):** discovered BeatStars' undocumented
+  public read path (Algolia search index + `main.v2` API — see CLAUDE.md for creds/gotchas).
+  `scripts/fetch-beatstars.mjs` pulls a snapshot into `src/data/beatstars-catalogue.json`
+  (6 featured beats + all 4 sound kits, with real titles/BPM/key/duration/price and
+  **real per-item deep links** — `/beat/<slug>`, `/sound-kits/<slug>`). Clicking BUY/GET now
+  lands on the exact BeatStars listing. Store totals (227 beats · 4 kits) show in the status
+  bar. **Build-time only** — the live site never calls BeatStars; re-run the script to
+  refresh. `content.ts` now sources beats/kits from that JSON.
+- **Working audio player (DONE 2026-07-10):** `Player.tsx` drives a real `<audio>` with live
+  seek/elapsed; transport buttons emit a synthesized Web-Audio "retro blip". Placeholder =
+  a self-contained 15s chiptune loop (`public/audio/placeholder-loop.wav`) — swap for a real
+  NCS track / Luka preview later (couldn't hotlink NCS or synth an mp3 offline).
 - **Retro color pass (DONE 2026-07-10):** phosphor-amber readouts (marquee/counter/
   transport time), magenta titlebar tail + bottom horizon glow, `--led` green token.
-  Tokens recorded in CLAUDE.md.
-- **Next up:** (1) import repo into Vercel (dashboard, GitHub already connected) →
-  `test-prod` preview URL for sign-off; (2) swap in Luka's real beats/kits content +
-  Telegram link; (3) once Supabase exists, fill env → run migrations → create the first
-  admin user → point the public page at Payload instead of `content.ts`.
+- **Next up:** (1) import repo into Vercel → `test-prod` preview URL for sign-off; (2) swap
+  the placeholder song for a real track; optionally expand the featured-beats count or add a
+  BeatStars embed; (3) once Supabase exists, fill env → migrations → first admin user →
+  point the public page at Payload instead of `content.ts` (and move the catalogue sync into
+  a Payload job/cron if the client wants auto-refresh).
 - **Blocked on:** client inputs (domain, brand assets, copy, BeatStars/social URLs, Supabase
   project, Claude API key) — see **Inputs needed**.
 
@@ -177,10 +189,10 @@
 - **Domain** (own `lukarajhl.com`? registrar access) or buy one.
 - **Brand assets:** logo, photos, reference sites, any color tweaks.
 - **Copy:** bio/artist statement, tagline, genre descriptors.
-- **Links:** ~~BeatStars store, YouTube channel, Instagram handle~~ **received 2026-07-10**
-  (beatstars.com/rajhl · youtube.com/@lukarajhl · instagram.com/luka.rajhl · Spotify playlist
-  `7JRpQCqP4BIrO0Wk35MaMD`). Still needed: **per-beat/per-kit BeatStars URLs**, where kits
-  are sold, **Telegram channel link**.
+- **Links:** ~~BeatStars store, YouTube, Instagram, Telegram, Spotify, per-beat/per-kit
+  URLs~~ **all received / auto-derived 2026-07-10** (Telegram invite `t.me/+nfPjj9ktvsYwMWVk`;
+  per-item BeatStars deep links now pulled automatically by `fetch-beatstars.mjs`). Optional
+  future input: a real song to replace the placeholder audio loop.
 - **Supabase project** (create → `DATABASE_URL` + keys) for Payload/DB.
 - **Phase 2:** Instagram account type (Business/Creator?), YouTube OAuth willingness,
   BeatStars CSV export, **Claude API key** + budget.

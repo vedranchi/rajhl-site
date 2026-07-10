@@ -34,8 +34,21 @@ system, below).
 ### Product / domain
 - **Do NOT rebuild commerce/licensing.** BeatStars owns checkout, leases (MP3/WAV/exclusive),
   contracts, and payouts. We only **embed / deep-link**.
-- **BeatStars has NO public API.** Dashboard sales data = **CSV import / manual only**. Do not
-  scrape (ToS + fragility).
+- **BeatStars has NO *documented* public API.** Sales/analytics data = **CSV import / manual
+  only**. **Never scrape at runtime** (ToS + fragility) — the live site must make zero calls
+  to BeatStars.
+- **Catalogue deep-links (done 2026-07-10):** there IS an undocumented but public,
+  unauthenticated read path — their **Algolia search index** (app `NMMGZJQ6QI`, index
+  `public_prod_inventory_track_index` / `…_soundkit_index`, filter `memberId:MR1947497`,
+  `Referer: https://www.beatstars.com/` required) plus the **v2 read API**
+  (`https://main.v2.beatstars.com/track?id=` / `…/soundkit?id=`) for canonical URLs.
+  We use these **build-time only**, via `scripts/fetch-beatstars.mjs`, to bake a snapshot
+  into `src/data/beatstars-catalogue.json` (real per-beat `/beat/<slug>` + per-kit
+  `/sound-kits/<slug>` links, BPM, key, duration, price). Re-run the script to refresh;
+  commit the JSON. **Do not** call these endpoints from the app at request time.
+  Gotchas: the `bsta.rs/k/<id>/` kit short-link redirects to a *private* pro-page — use the
+  v2 `relative_uri` (`/sound-kits/<slug>`) instead; Algolia rejects requests without the
+  Referer header.
 - **Instagram Graph API** needs a **Business/Creator account + linked Facebook Page + Meta app
   review**. Treat as conditional; manual fallback. (Instagram Basic Display was deprecated.)
 - **YouTube:** public stats via Data API v3 (API key); private metrics (watch time, revenue)
@@ -61,8 +74,15 @@ system, below).
   `#7FE0A4`. Amber/magenta are *readout/tint* colors only — violet stays the primary accent;
   still no light themes.
 - **Spotify:** playlist embedded via the official iframe
-  (`open.spotify.com/embed/playlist/<id>`) in a dedicated "♫ Playlist" tab — no API key
-  needed, works with Spotify's CSP. Don't proxy or scrape Spotify.
+  (`open.spotify.com/embed/playlist/<id>`) in its own **`SpotifyWindow`** that sits **beside
+  the invite form** in a `.bottomrow` flex row (client asked for it next to the form, not a
+  tab) — no API key needed, works with Spotify's CSP. Don't proxy or scrape Spotify.
+- **Transport player is real:** `src/components/retro/Player.tsx` (client) drives an
+  `<audio>` element with live seek/elapsed, and plays a short synthesized **Web Audio**
+  "retro blip" on every control press (square-wave chiptune, no asset). Placeholder track is
+  a self-contained 15s synthesized loop at `public/audio/placeholder-loop.wav` (no ffmpeg /
+  NCS hotlink available offline) — swap for a real NCS track or Luka's own preview by
+  dropping a file in `public/audio` and updating `nowPlaying` in `content.ts`.
 
 ### Build / ops
 - **Payload on Vercel is serverless — no local disk.** Use the Postgres adapter (Supabase) +
