@@ -18,8 +18,14 @@
   media-player window (Beats/Kits/Channels/About tabs + Winamp transport) + Telegram
   invite-form window. `pnpm build` / `pnpm dev` / `pnpm lint` all pass; SSR HTML verified.
   Placeholder content still (`src/data/content.ts`).
-- **Next up:** deploy a Vercel preview for sign-off → swap in Luka's real content → add
-  Payload + Supabase (needs the client's Supabase project).
+- **Git (DONE):** repo is now on GitHub → `git@github.com:vedranchi/rajhl-site.git`.
+  `main` = protected production baseline (PR-only, no force-push/delete, set as default via
+  API — never pushed to directly). `test-prod` = working/dev branch (all commits land here;
+  merge to `main` via PR). Author is **Vedran Chichov** — *no Claude co-author footer* (user
+  instruction, overrides CLAUDE.md's footer rule).
+- **Next up:** import repo into Vercel (dashboard, GitHub already connected) → `test-prod`
+  gets a preview URL for sign-off → swap in Luka's real content → add Payload + Supabase
+  (needs the client's Supabase project).
 - **Blocked on:** client inputs (domain, brand assets, copy, BeatStars/social URLs, Supabase
   project, Claude API key) — see **Inputs needed**.
 
