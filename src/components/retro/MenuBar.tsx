@@ -187,20 +187,21 @@ export function MenuBar() {
                       </a>
                     );
                   }
+                  const isToggle = it.checked !== undefined;
                   return (
                     <button
                       key={i}
                       type="button"
                       className="menu-item"
-                      role="menuitemcheckbox"
-                      aria-checked={it.checked}
+                      role={isToggle ? "menuitemcheckbox" : "menuitem"}
+                      aria-checked={isToggle ? it.checked : undefined}
                       onClick={() => {
                         it.run();
-                        if (it.checked === undefined) setOpen(null);
+                        if (!isToggle) setOpen(null);
                       }}
                     >
                       <span className="menu-check" aria-hidden="true">
-                        {it.checked === undefined ? "" : it.checked ? "✓" : ""}
+                        {isToggle ? (it.checked ? "✓" : "") : ""}
                       </span>
                       {it.label}
                     </button>
