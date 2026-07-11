@@ -84,29 +84,31 @@ async function main() {
 
   const beats = [];
   for (const [i, h] of topBeats.entries()) {
-    const d = await detail("track", numericId(h));
+    const id = numericId(h);
+    const d = await detail("track", id);
     beats.push({
       n: i === 0 ? "▶" : String(i + 1).padStart(2, "0"),
       title: h.title,
       time: d.duration ?? secs(d.length),
       plays: plays(h),
       buyUrl: d.beatstars_uri ?? `https://www.beatstars.com/beat/${d.title_uri}`,
+      // Stable redirect endpoint → fresh signed S3 mp3 on each play (never expires).
+      // Same client-side preview exception as topBeat below — lets the transport's
+      // skip button shuffle across all 10 front-page beats, not just the first.
+      stream: `https://main.v2.beatstars.com/stream?id=${id}&return=audio`,
       playing: i === 0,
     });
   }
 
-  // The single most-popular beat streams in the browser player.
-  const top = topBeats[0];
-  const topId = top ? numericId(top) : null;
-  const topDetail = top ? await detail("track", topId) : {};
-  const topBeat = top
+  // The single most-popular beat is what the player loads first.
+  const topBeatEntry = beats[0];
+  const topBeat = topBeatEntry
     ? {
-        title: top.title,
+        title: topBeatEntry.title,
         artist: "Luka Rajhl",
-        // Stable redirect endpoint → fresh signed S3 mp3 on each play (never expires).
-        stream: `https://main.v2.beatstars.com/stream?id=${topId}&return=audio`,
-        total: topDetail.duration ?? "",
-        buyUrl: topDetail.beatstars_uri ?? beats[0]?.buyUrl ?? "",
+        stream: topBeatEntry.stream,
+        total: topBeatEntry.time,
+        buyUrl: topBeatEntry.buyUrl,
       }
     : null;
 

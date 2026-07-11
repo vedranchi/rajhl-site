@@ -1,10 +1,10 @@
 {
-  "_generatedAt": "2026-07-10T21:46:05.969Z",
+  "_generatedAt": "2026-07-11T18:22:55.283Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
   "totals": {
-    "beats": 227,
+    "beats": 228,
     "kits": 4
   },
   "shown": {
@@ -25,6 +25,7 @@
       "time": "03:02",
       "plays": 765,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
+      "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
     },
     {
@@ -33,6 +34,7 @@
       "time": "01:24",
       "plays": 734,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
+      "stream": "https://main.v2.beatstars.com/stream?id=24146021&return=audio",
       "playing": false
     },
     {
@@ -41,6 +43,7 @@
       "time": "02:21",
       "plays": 605,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
+      "stream": "https://main.v2.beatstars.com/stream?id=24210831&return=audio",
       "playing": false
     },
     {
@@ -49,6 +52,7 @@
       "time": "01:33",
       "plays": 527,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
+      "stream": "https://main.v2.beatstars.com/stream?id=24632696&return=audio",
       "playing": false
     },
     {
@@ -57,6 +61,7 @@
       "time": "02:05",
       "plays": 519,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
+      "stream": "https://main.v2.beatstars.com/stream?id=23567398&return=audio",
       "playing": false
     },
     {
@@ -65,6 +70,7 @@
       "time": "01:33",
       "plays": 510,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-type-beat-manifest-24552914",
+      "stream": "https://main.v2.beatstars.com/stream?id=24552914&return=audio",
       "playing": false
     },
     {
@@ -73,14 +79,16 @@
       "time": "01:50",
       "plays": 458,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-white-noise-24469816",
+      "stream": "https://main.v2.beatstars.com/stream?id=24469816&return=audio",
       "playing": false
     },
     {
       "n": "08",
       "title": "fakemink + puresnow type beat - \"on me\"",
       "time": "02:44",
-      "plays": 445,
+      "plays": 447,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
+      "stream": "https://main.v2.beatstars.com/stream?id=24872873&return=audio",
       "playing": false
     },
     {
@@ -89,6 +97,7 @@
       "time": "01:24",
       "plays": 388,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-2016-type-beat-prayed-for-this-24260596",
+      "stream": "https://main.v2.beatstars.com/stream?id=24260596&return=audio",
       "playing": false
     },
     {
@@ -97,6 +106,7 @@
       "time": "01:38",
       "plays": 348,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-closer-23967753",
+      "stream": "https://main.v2.beatstars.com/stream?id=23967753&return=audio",
       "playing": false
     }
   ],

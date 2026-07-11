@@ -14,6 +14,7 @@ export type Beat = {
   time: string;
   plays: number;
   buyUrl: string;
+  stream: string;
   playing?: boolean;
 };
 
@@ -78,10 +79,31 @@ export const spotifyPlaylist = {
   openUrl: "https://open.spotify.com/playlist/7JRpQCqP4BIrO0Wk35MaMD",
 };
 
+export type PlaylistTrack = {
+  title: string;
+  artist: string;
+  src: string;
+  total: string;
+  buyUrl: string;
+};
+
 /**
- * Browser transport player. Primary source = the most-popular beat streamed from
- * BeatStars (a client-side preview, embed-like). `fallbackSrc` is a self-contained
- * retro loop used if the stream fails to load, so the player always works.
+ * Browser transport playlist — every beat shown on the front page (the top-10
+ * snapshot), each streamed from BeatStars (a client-side preview, embed-like).
+ * The Skip control shuffles across this list. Track 0 is the most-popular beat,
+ * matching what the table shows as "now playing".
+ */
+export const playlist: PlaylistTrack[] = beats.map((b) => ({
+  title: b.title,
+  artist: "Luka Rajhl",
+  src: b.stream,
+  total: b.time || "0:00",
+  buyUrl: b.buyUrl,
+}));
+
+/**
+ * Initial transport state. `fallbackSrc` is a self-contained retro loop used if
+ * a stream fails to load, so the player always works.
  */
 const top = catalogue.topBeat;
 export const nowPlaying = {

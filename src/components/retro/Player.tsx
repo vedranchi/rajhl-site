@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { nowPlaying } from "@/data/content";
+import { nowPlaying, playlist } from "@/data/content";
 
 /**
- * Working transport. Primary source is the most-popular beat streamed from
- * BeatStars; if that fails to load it falls back to a self-contained retro loop,
- * so the player always plays something. Every control also emits a synthesized
- * "retro blip" (Web Audio) — no audio asset needed for the SFX. The File/Play
- * menu can drive it via the `lr:toggle-play` window event.
+ * Working transport. Primary source is the front-page playlist (the 10 beats
+ * shown in the table), streamed from BeatStars; if the current track fails to
+ * load it falls back to a self-contained retro loop, so the player always
+ * plays something. Skip picks a random other track from that same 10. Every
+ * control also emits a synthesized "retro blip" (Web Audio) — no audio asset
+ * needed for the SFX. The File/Play menu can drive it via the `lr:toggle-play`
+ * window event.
  */
 export function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -16,7 +18,11 @@ export function Player() {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
   const [elapsed, setElapsed] = useState("0:00");
-  const [total, setTotal] = useState(nowPlaying.total);
+  // Index into `playlist` for the track currently loaded (0 = the most-popular
+  // beat, matching the table's "now playing" row).
+  const [trackIndex, setTrackIndex] = useState(0);
+  const track = playlist[trackIndex] ?? null;
+  const [total, setTotal] = useState(track?.total || nowPlaying.total);
   const [usingFallback, setUsingFallback] = useState(false);
 
   const blip = useCallback((kind: "play" | "skip" | "stop") => {
@@ -60,13 +66,13 @@ export function Player() {
       }
     };
     const onEnd = () => setPlaying(false);
-    // If the BeatStars stream fails, swap to the bundled loop once.
+    // If the current BeatStars stream fails, swap to the bundled loop once.
     const onError = () => {
       if (!usingFallback && a.src !== location.origin + nowPlaying.fallbackSrc) {
         setUsingFallback(true);
         a.src = nowPlaying.fallbackSrc;
         a.load();
-        if (playing) void a.play();
+        if (playing) a.play().catch(() => {});
       }
     };
     a.addEventListener("timeupdate", onTime);
@@ -86,7 +92,7 @@ export function Player() {
     if (!a) return;
     if (a.paused) {
       blip("play");
-      void a.play();
+      a.play().catch(() => {});
       setPlaying(true);
     } else {
       blip("stop");
@@ -107,22 +113,37 @@ export function Player() {
     if (!a) return;
     blip("skip");
     a.currentTime = 0;
-    if (!a.paused) void a.play();
+    if (!a.paused) a.play().catch(() => {});
   }
 
+  // Jump to a random *other* beat from the front-page playlist.
   function skip() {
     const a = audioRef.current;
-    if (!a || !a.duration || !isFinite(a.duration)) return;
+    if (!a || playlist.length === 0) return;
     blip("skip");
-    a.currentTime = Math.max(0, a.duration - 3);
-    if (!a.paused) void a.play();
+    let next = trackIndex;
+    if (playlist.length > 1) {
+      do {
+        next = Math.floor(Math.random() * playlist.length);
+      } while (next === trackIndex);
+    }
+    const nextTrack = playlist[next];
+    const wasPlaying = !a.paused;
+    setTrackIndex(next);
+    setUsingFallback(false);
+    setProgress(0);
+    setElapsed("0:00");
+    setTotal(nextTrack.total || "0:00");
+    a.src = nextTrack.src;
+    a.load();
+    if (wasPlaying) a.play().catch(() => {});
   }
 
   return (
     <div className="transport" aria-label="Audio player">
       {/* No crossOrigin: we only need plain playback, so the browser can stream the
           BeatStars→S3 redirect as opaque cross-origin media (no CORS requirement). */}
-      <audio ref={audioRef} src={nowPlaying.src} preload="none" />
+      <audio ref={audioRef} src={track?.src ?? nowPlaying.src} preload="none" />
       <div className="tbtns">
         <button className="tbtn" type="button" onClick={restart} aria-label="Restart">
           ⏮
@@ -130,17 +151,17 @@ export function Player() {
         <button className="tbtn" type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
           {playing ? "⏸" : "▶"}
         </button>
-        <button className="tbtn" type="button" onClick={skip} aria-label="Skip to end">
+        <button className="tbtn" type="button" onClick={skip} aria-label="Skip to a random beat">
           ⏭
         </button>
       </div>
       <div className="nowbox">
         <div className="nowlabel">
           NOW PLAYING:{" "}
-          <a href={nowPlaying.buyUrl} target="_blank" rel="noopener noreferrer" className="nowlink">
-            <b>{usingFallback ? "Retro Test Loop" : nowPlaying.title}</b>
+          <a href={track?.buyUrl ?? nowPlaying.buyUrl} target="_blank" rel="noopener noreferrer" className="nowlink">
+            <b>{usingFallback ? "Retro Test Loop" : (track?.title ?? nowPlaying.title)}</b>
           </a>{" "}
-          — {usingFallback ? "Placeholder" : nowPlaying.artist}
+          — {usingFallback ? "Placeholder" : (track?.artist ?? nowPlaying.artist)}
         </div>
         <div className="seek" aria-hidden="true">
           <div className="fill" style={{ inset: `0 ${100 - progress * 100}% 0 0` }} />
