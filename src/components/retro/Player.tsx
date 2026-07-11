@@ -142,8 +142,13 @@ export function Player() {
   return (
     <div className="transport" aria-label="Audio player">
       {/* No crossOrigin: we only need plain playback, so the browser can stream the
-          BeatStars→S3 redirect as opaque cross-origin media (no CORS requirement). */}
-      <audio ref={audioRef} src={track?.src ?? nowPlaying.src} preload="none" />
+          BeatStars→S3 redirect as opaque cross-origin media (no CORS requirement).
+          src is intentionally static (set once): track changes are driven purely
+          imperatively (skip/onError set a.src + a.load() themselves) — binding
+          this to `track` would make React re-apply the src attribute on every
+          re-render, which re-triggers the browser's load algorithm and aborts
+          the play() call skip() just started. */}
+      <audio ref={audioRef} src={nowPlaying.src} preload="none" />
       <div className="tbtns">
         <button className="tbtn" type="button" onClick={restart} aria-label="Restart">
           ⏮
