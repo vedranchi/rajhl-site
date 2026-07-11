@@ -277,7 +277,12 @@ a { color: inherit; text-decoration: none; }
 .row:hover { background: rgba(139, 124, 200, 0.10); }
 .row.playing { background: rgba(139, 124, 200, 0.20); color: var(--text); }
 .row.playing .num { color: var(--glow); }
-.row .num { color: var(--muted); }
+.row .num {
+  color: var(--muted); background: none; border: none; padding: 0; margin: 0;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.row .num:hover { color: var(--glow); }
+.row .num:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 .row .ttl { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row .mut { color: var(--muted); }
 .row .r-plays { text-align: right; color: var(--amber); font-variant-numeric: tabular-nums; }

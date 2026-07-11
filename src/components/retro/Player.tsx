@@ -10,7 +10,10 @@ import { nowPlaying, playlist } from "@/data/content";
  * plays something. Skip picks a random other track from that same 10. Every
  * control also emits a synthesized "retro blip" (Web Audio) — no audio asset
  * needed for the SFX. The File/Play menu can drive it via the `lr:toggle-play`
- * window event.
+ * window event; the Beats table's per-row play buttons drive it via
+ * `lr:play-track` (detail: `{ index }`) and read the transport's state back
+ * via the `lr:track-changed` broadcast (detail: `{ index, playing }`) so the
+ * playing row can be highlighted — see `BeatsPanel` in `panels.tsx`.
  */
 export function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -107,6 +110,44 @@ export function Player() {
     window.addEventListener("lr:toggle-play", h);
     return () => window.removeEventListener("lr:toggle-play", h);
   }, [toggle]);
+
+  // Load + play a specific playlist entry (explicit selection, e.g. a Beats
+  // table row) — always starts playback, unlike skip() which preserves the
+  // prior paused/playing state.
+  const playTrack = useCallback(
+    (index: number) => {
+      const a = audioRef.current;
+      const nextTrack = playlist[index];
+      if (!a || !nextTrack) return;
+      blip("play");
+      setTrackIndex(index);
+      setUsingFallback(false);
+      setProgress(0);
+      setElapsed("0:00");
+      setTotal(nextTrack.total || "0:00");
+      a.src = nextTrack.src;
+      a.load();
+      a.play().catch(() => {});
+      setPlaying(true);
+    },
+    [blip],
+  );
+
+  // Let the Beats table's row play buttons pick a specific track.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const index = (e as CustomEvent<{ index: number }>).detail?.index;
+      if (typeof index === "number") playTrack(index);
+    };
+    window.addEventListener("lr:play-track", h);
+    return () => window.removeEventListener("lr:play-track", h);
+  }, [playTrack]);
+
+  // Broadcast what's currently loaded/playing so the Beats table can
+  // highlight the matching row and swap its icon.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("lr:track-changed", { detail: { index: trackIndex, playing } }));
+  }, [trackIndex, playing]);
 
   function restart() {
     const a = audioRef.current;

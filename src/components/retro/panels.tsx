@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   beats,
   kits,
@@ -20,6 +23,30 @@ function ext(url: string) {
 }
 
 export function BeatsPanel() {
+  // Mirrors the transport's state (see Player.tsx) so the row for whatever
+  // is actually loaded/playing gets highlighted, even when playback started
+  // from the transport itself or the Play menu, not a row click.
+  const [current, setCurrent] = useState({ index: 0, playing: false });
+
+  useEffect(() => {
+    const h = (e: Event) => {
+      const detail = (e as CustomEvent<{ index: number; playing: boolean }>).detail;
+      if (detail) setCurrent(detail);
+    };
+    window.addEventListener("lr:track-changed", h);
+    return () => window.removeEventListener("lr:track-changed", h);
+  }, []);
+
+  // Clicking the currently-playing row's button toggles it; any other row
+  // loads and starts playing that beat.
+  function handleRowPlay(index: number) {
+    if (index === current.index) {
+      window.dispatchEvent(new CustomEvent("lr:toggle-play"));
+    } else {
+      window.dispatchEvent(new CustomEvent("lr:play-track", { detail: { index } }));
+    }
+  }
+
   return (
     <>
       <div className="lcd">
@@ -46,9 +73,19 @@ export function BeatsPanel() {
           <span>Time</span>
           <span className="h-buy">License</span>
         </div>
-        {beats.map((b) => (
-          <div className={`row ${b.playing ? "playing" : ""}`} key={b.title}>
-            <span className="num">{b.n}</span>
+        {beats.map((b, i) => {
+          const isCurrent = i === current.index;
+          const isPlaying = isCurrent && current.playing;
+          return (
+          <div className={`row ${isPlaying ? "playing" : ""}`} key={b.title}>
+            <button
+              type="button"
+              className="num"
+              onClick={() => handleRowPlay(i)}
+              aria-label={isPlaying ? `Pause ${b.title}` : `Play ${b.title}`}
+            >
+              {isCurrent ? (isPlaying ? "⏸" : "▶") : String(i + 1).padStart(2, "0")}
+            </button>
             <span className="ttl">{b.title}</span>
             <span className="mut r-plays">▶ {b.plays.toLocaleString()}</span>
             <span className="mut">{b.time}</span>
@@ -56,7 +93,8 @@ export function BeatsPanel() {
               [BUY ↗]
             </a>
           </div>
-        ))}
+          );
+        })}
       </div>
       <p className="listhint">
         » Top {catalogueShown.beats} by plays · checkout &amp; licensing handled on BeatStars
