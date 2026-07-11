@@ -455,8 +455,28 @@ h2.blocktitle { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppe
 }
 .field input::placeholder { color: #5f5d68; }
 .field input:focus { outline: none; border-color: var(--accent); box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--accent); }
-.invitebtn { padding: 12px; font-size: 0.78rem; letter-spacing: 0.12em; margin-top: 2px; cursor: pointer; width: 100%; }
+.invitebtn { padding: 12px; font-size: 0.78rem; letter-spacing: 0.12em; margin-top: 2px; cursor: pointer; width: 100%; display: block; text-align: center; }
+.invitebtn:disabled { opacity: 0.6; cursor: wait; }
 .formfine { margin: 3px 0 0; font-size: 0.66rem; color: var(--muted); text-align: center; }
+
+/* honeypot — present in the DOM but out of sight/reach of humans */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* inline validation / network error — amber retro-terminal warning */
+.form-msg { margin: 0; font-size: 0.7rem; line-height: 1.5; padding: 8px 10px; }
+.form-msg.error {
+  color: var(--amber);
+  background: rgba(230, 180, 90, 0.08);
+  border: 1px solid rgba(230, 180, 90, 0.5);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* success panel — LED-green, swaps in for the form. Receives programmatic
+   focus when it appears (tabindex=-1), so suppress the stray outline. */
+.form-success { display: flex; flex-direction: column; gap: 10px; padding: 2px 0; }
+.form-success:focus { outline: none; }
+.form-success .fs-title { margin: 0; color: var(--led); font-size: 0.92rem; letter-spacing: 0.04em; text-shadow: 0 0 8px rgba(127, 224, 164, 0.35); }
+.form-success .fs-body { margin: 0; font-size: 0.74rem; line-height: 1.55; color: var(--muted); }
 .online { margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--hair); font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; gap: 7px; }
 .online:hover { color: var(--glow); }
 .online .odot { width: 8px; height: 8px; border-radius: 50%; background: var(--led); box-shadow: 0 0 8px var(--led); flex: none; }
