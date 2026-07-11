@@ -125,6 +125,28 @@ system, below).
   before `pnpm build`; it exits 1 while the `sharp` / `unrs-resolver` build scripts are
   unapproved. Fix (done): set `allowBuilds: { sharp: true, unrs-resolver: true }` in
   `pnpm-workspace.yaml`, then run `pnpm install` once so the scripts execute.
+- **`pnpm generate:types` is broken on Node v25 (confirmed 2026-07-11) — do not keep
+  retrying it.** The Payload CLI loads `payload.config.ts` via `tsx`'s CJS `require()` hook
+  outside of Next's bundler; one dependency in the graph (`@payloadcms/richtext-lexical`) is
+  ESM with top-level await, and Node's synchronous `require(esm)` interop explicitly refuses
+  those (`ERR_REQUIRE_ASYNC_MODULE` — by design, not a bug). `--use-swc` fails too (needs
+  `@swc-node/register`, which isn't installed, and hits raw-Node ESM resolution errors on our
+  extensionless imports). **`next build` / `next dev` don't hit this** — Next's own bundler
+  loads `payload.config.ts` fine, which is why `pnpm build` and the Payload admin/API both
+  work despite this. Net effect: **schema push and the admin UI work normally**; only
+  `payload-types.ts` generation is blocked. Matches the prior "generate on LTS when
+  convenient" deferral — revisit on an LTS Node, don't burn time routing around it meanwhile.
+- **Supabase project is live and wired to Vercel (done 2026-07-11):** project ref
+  `dgaiclbbmmqylvtajetc`, connected via the Vercel↔Supabase marketplace integration under
+  Vercel project `vedran-chichov/rajhl-site`. This auto-injected `POSTGRES_*` / `SUPABASE_*`
+  env vars into Vercel scoped to **Production only** (not Preview/Development) — pull them
+  with `vercel env pull .env.local --environment=production` if a fresh machine needs them
+  (this is a real secrets pull; don't run it without the user asking). Local `.env`
+  `DATABASE_URL` is hand-set to the **pooler** URI (`aws-0-eu-central-1.pooler.supabase.com:6543`,
+  username `postgres.dgaiclbbmmqylvtajetc`) — the same one used in prod, so **local `pnpm dev`
+  now pushes schema against the live production DB**, there's no separate dev database yet.
+  First Payload admin user was created via the browser at `/admin`. Revisit whether
+  dev/preview need their own DB before this matters (e.g. before seeding test data at volume).
 
 ### Artifacts / design previews
 - Artifact CSP **blocks external fonts/images/scripts** — inline everything (data URIs). For
