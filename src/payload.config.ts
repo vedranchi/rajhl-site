@@ -9,6 +9,7 @@ import sharp from "sharp";
 
 import { Beats } from "./collections/Beats";
 import { Channels } from "./collections/Channels";
+import { InviteRequests } from "./collections/InviteRequests";
 import { Kits } from "./collections/Kits";
 import { Media } from "./collections/Media";
 import { Users } from "./collections/Users";
@@ -39,7 +40,7 @@ export default buildConfig({
       titleSuffix: "· Luka Rajhl",
     },
   },
-  collections: [Beats, Kits, Channels, Media, Users],
+  collections: [Beats, Kits, Channels, Media, Users, InviteRequests],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
