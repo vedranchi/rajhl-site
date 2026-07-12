@@ -45,3 +45,5 @@ next-env.d.ts
 HANDOFF.md
 HANDOFF*.md
 docs/handoffs/
+docs/
+docs

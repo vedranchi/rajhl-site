@@ -125,17 +125,33 @@ system, below).
   before `pnpm build`; it exits 1 while the `sharp` / `unrs-resolver` build scripts are
   unapproved. Fix (done): set `allowBuilds: { sharp: true, unrs-resolver: true }` in
   `pnpm-workspace.yaml`, then run `pnpm install` once so the scripts execute.
-- **`pnpm generate:types` is broken on Node v25 (confirmed 2026-07-11) — do not keep
-  retrying it.** The Payload CLI loads `payload.config.ts` via `tsx`'s CJS `require()` hook
-  outside of Next's bundler; one dependency in the graph (`@payloadcms/richtext-lexical`) is
-  ESM with top-level await, and Node's synchronous `require(esm)` interop explicitly refuses
-  those (`ERR_REQUIRE_ASYNC_MODULE` — by design, not a bug). `--use-swc` fails too (needs
-  `@swc-node/register`, which isn't installed, and hits raw-Node ESM resolution errors on our
-  extensionless imports). **`next build` / `next dev` don't hit this** — Next's own bundler
-  loads `payload.config.ts` fine, which is why `pnpm build` and the Payload admin/API both
-  work despite this. Net effect: **schema push and the admin UI work normally**; only
-  `payload-types.ts` generation is blocked. Matches the prior "generate on LTS when
-  convenient" deferral — revisit on an LTS Node, don't burn time routing around it meanwhile.
+- **`pnpm generate:types` / `pnpm generate:importmap` FIXED (2026-07-12).** Root cause
+  (confirmed against upstream `payloadcms/payload#15701` and `#15875`): the Payload CLI's bin
+  scripts load `payload.config.ts` via `tsx`'s CJS `require()` hook; without
+  `"type": "module"` in `package.json`, that hook falls through to `require()` for ESM
+  dependencies in the graph (`@payloadcms/richtext-lexical`, top-level await), which Node's
+  synchronous `require(esm)` interop explicitly refuses (`ERR_REQUIRE_ASYNC_MODULE` — by
+  design, not a bug, and **not Node-v25-specific** — it applies on any Node ≥22.12). **Fix:**
+  added `"type": "module"` to `package.json`; the CLI now uses `import()` instead. Both
+  `pnpm generate:types` (writes `src/payload-types.ts`) and `pnpm generate:importmap` (fixed
+  the `PayloadComponent not found: @payloadcms/next/rsc#CollectionCards` admin warning) now
+  succeed and are regenerated/committed. Re-run either after changing collections. Dead end
+  for reference: `NODE_OPTIONS=--no-experimental-require-module` does **not** fix this — it
+  just trades `ERR_REQUIRE_ASYNC_MODULE` for an earlier `ERR_REQUIRE_ESM` on
+  `@payloadcms/db-postgres`'s own ESM build. Don't retry that route.
+- **Remaining Node v25 / Turbopack-dev-only symptom (still open, 2026-07-12):**
+  `/api/graphql` **500s under `pnpm dev`** — Turbopack's own external `require()` of ESM
+  `graphql@17` hits the same kind of `require(esm)` race (`ERR_INTERNAL_ASSERTION: … not yet
+  fully loaded`), a **different code path** than the CLI fix above (this is Turbopack's dev
+  bundler, not `tsx`), so `"type": "module"` does not resolve it. **Production is
+  unaffected** — reverified 2026-07-12 via `pnpm build` + `pnpm start`:
+  `POST /api/graphql` returns real data (`{"data":{"__typename":"Query"}}`). Test GraphQL
+  against a prod server, don't chase the dev 500.
+- **Invite-requests access control VERIFIED (2026-07-11, prod build):** anonymous
+  `GET`/`POST`/`PATCH`/`DELETE /api/invite-requests` → 403; GraphQL `createInviteRequest` →
+  403-in-envelope. The `create: () => false` keystone works; server-action writes go through
+  the Local API (`overrideAccess` default). See §12/§14 of
+  `docs/plans/private-group-invite-payload-plan.md`.
 - **Supabase project is live and wired to Vercel (done 2026-07-11):** project ref
   `dgaiclbbmmqylvtajetc`, connected via the Vercel↔Supabase marketplace integration under
   Vercel project `vedran-chichov/rajhl-site`. This auto-injected `POSTGRES_*` / `SUPABASE_*`
