@@ -1,45 +1,30 @@
 "use server";
 
 import { headers } from "next/headers";
-import { Resend } from "resend";
 import { validateInvite } from "@/lib/validate-invite";
+import { getPayloadClient } from "@/lib/payload";
 
 /**
- * Server action for the private-group invite form. Backend only — the form is
- * not wired to it yet (Task 3 of docs/handoffs/private-group-invite-task-1.md).
+ * Server action for the private-group invite form.
  *
- * Flow: honeypot + time-gate (silent drop) → validation → best-effort IP rate
- * limit → email the owner via Resend. CSRF is covered by Next server actions
- * (POST-only + same-origin enforcement). Env-dormant like the rest of the
- * stack: with RESEND_API_KEY unset it fails soft with a friendly error.
+ * Flow: honeypot + time-gate (silent drop) → validation → durable IP rate
+ * limit (Postgres, via the invite-requests collection) → persist the lead. CSRF
+ * is covered by Next server actions (POST-only + same-origin enforcement).
+ *
+ * The owner email + status lifecycle (emailed/email_failed/duplicate) now live
+ * in the collection's `afterChange` hook, which runs synchronously inside
+ * `payload.create` — so a lead is always stored (even if the send later fails,
+ * it's marked `email_failed` for admin resend) and the action never sends email
+ * itself. The env guard below stays only to surface a friendlier "temporarily
+ * unavailable" message when Resend is unconfigured. See §5/§15.1 of
+ * docs/plans/private-group-invite-payload-plan.md.
  */
 
 export type InviteResult = { ok: true } | { ok: false; error: string };
 
 const MIN_FILL_MS = 3_000; // submissions faster than this are bots
-const RATE_LIMIT = 3; // sends per IP…
-const RATE_WINDOW_MS = 60 * 60 * 1_000; // …per hour
-
-// Best-effort, per-instance (serverless caveat documented in the handoff).
-const recentByIp = new Map<string, number[]>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (recentByIp.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (hits.length >= RATE_LIMIT) {
-    recentByIp.set(ip, hits);
-    return true;
-  }
-  hits.push(now);
-  recentByIp.set(ip, hits);
-  // Opportunistic cleanup so the map can't grow unbounded.
-  if (recentByIp.size > 1_000) {
-    for (const [k, v] of recentByIp) {
-      if (v.every((t) => now - t >= RATE_WINDOW_MS)) recentByIp.delete(k);
-    }
-  }
-  return false;
-}
+const RATE_LIMIT = Number(process.env.INVITE_RATE_LIMIT) || 3; // creates per IP…
+const RATE_WINDOW_MS = Number(process.env.INVITE_RATE_WINDOW_MS) || 60 * 60 * 1_000; // …per hour
 
 export async function requestInvite(formData: FormData): Promise<InviteResult> {
   // Honeypot: humans never see/fill this field. Pretend success so bots move on.
@@ -52,10 +37,12 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
   // Only enforced when present, so direct POSTs without the field still work.
   // Sub-3s fills are bots — silent drop.
   const elapsedRaw = formData.get("elapsedMs");
+  let elapsedMs: number | undefined;
   if (typeof elapsedRaw === "string" && elapsedRaw.trim() !== "") {
-    const elapsedMs = Number(elapsedRaw);
-    if (Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < MIN_FILL_MS) {
-      return { ok: true };
+    const parsed = Number(elapsedRaw);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      if (parsed < MIN_FILL_MS) return { ok: true };
+      elapsedMs = parsed;
     }
   }
 
@@ -65,48 +52,54 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
 
   const hdrs = await headers();
   const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "";
+  const userAgent = hdrs.get("user-agent")?.slice(0, 500) || "";
 
-  if (ip && rateLimited(ip)) {
-    return { ok: false, error: "Too many requests from your connection — try again in an hour." };
+  const payload = await getPayloadClient();
+
+  // Durable rate limit: Postgres-backed via the `ip` index, so it holds across
+  // serverless instances and cold starts (unlike the previous in-memory Map).
+  // No IP (proxy stripped it) ⇒ skip — honeypot + time-gate still carry the load.
+  if (ip) {
+    const { totalDocs } = await payload.count({
+      collection: "invite-requests",
+      where: {
+        ip: { equals: ip },
+        createdAt: { greater_than: new Date(Date.now() - RATE_WINDOW_MS).toISOString() },
+      },
+    });
+    if (totalDocs >= RATE_LIMIT) {
+      return { ok: false, error: "Too many requests from your connection — try again in an hour." };
+    }
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const notifyTo = process.env.INVITE_NOTIFY_TO;
-  if (!apiKey || !notifyTo) {
+  // Persist the lead. The afterChange hook runs synchronously here: it sends the
+  // owner email and stamps status (emailed / email_failed), or skips the send for
+  // a duplicate. The lead is stored regardless (plan §15.1), so a send failure
+  // never loses it — it's marked email_failed for an admin resend.
+  try {
+    await payload.create({
+      collection: "invite-requests",
+      draft: false,
+      data: {
+        username,
+        email,
+        status: "new", // hooks refine this → duplicate / emailed / email_failed
+        source: "invite-form",
+        ...(ip ? { ip } : {}),
+        ...(userAgent ? { userAgent } : {}),
+        ...(elapsedMs !== undefined ? { elapsedMs } : {}),
+      },
+    });
+  } catch (err) {
+    console.error("requestInvite: persist failed", err);
+    return { ok: false, error: "Could not send your request — please try again later." };
+  }
+
+  // The lead is saved; only the message differs when email delivery is down.
+  // Distinct copy from a transport failure, so the visitor gets a useful nudge.
+  if (!process.env.RESEND_API_KEY || !process.env.INVITE_NOTIFY_TO) {
     console.error("requestInvite: RESEND_API_KEY / INVITE_NOTIFY_TO not configured");
     return { ok: false, error: "Invite requests are temporarily unavailable — DM on Instagram instead." };
-  }
-
-  const now = new Date();
-  const skopje = now.toLocaleString("en-GB", { timeZone: "Europe/Skopje", hour12: false });
-
-  const text = [
-    `${username} requested access to your Inner Circle.`,
-    "",
-    `Username:  ${username}`,
-    `Email:     ${email}`,
-    `Timestamp: ${now.toISOString()} (UTC) · ${skopje} (Skopje)`,
-    `IP:        ${ip || "unavailable"}`,
-    "",
-    "— lukarajhl.com invite form (reply to answer the requester directly)",
-  ].join("\n");
-
-  try {
-    const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from: process.env.INVITE_FROM || "Inner Circle <onboarding@resend.dev>",
-      to: notifyTo,
-      replyTo: email,
-      subject: `${username} would like to join your Inner Circle`,
-      text,
-    });
-    if (error) {
-      console.error("requestInvite: Resend error", error);
-      return { ok: false, error: "Could not send your request — please try again later." };
-    }
-  } catch (err) {
-    console.error("requestInvite: send failed", err);
-    return { ok: false, error: "Could not send your request — please try again later." };
   }
 
   return { ok: true };

@@ -255,6 +255,9 @@ export interface InviteRequest {
   id: number;
   username: string;
   email: string;
+  /**
+   * Lifecycle, set automatically. Filter by 'Email failed' to find leads whose owner notification didn't send; mark 'Spam' to flag abuse.
+   */
   status: 'new' | 'emailed' | 'email_failed' | 'duplicate' | 'spam';
   source?: string | null;
   ip?: string | null;

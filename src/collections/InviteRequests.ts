@@ -1,4 +1,10 @@
 import type { CollectionConfig } from "payload";
+import {
+  inviteAfterChange,
+  inviteAfterOperation,
+  inviteBeforeChange,
+  inviteBeforeValidate,
+} from "./hooks/invite-requests";
 
 const adminOnly = ({ req: { user } }: { req: { user: unknown } }) => Boolean(user);
 
@@ -10,6 +16,7 @@ const adminOnly = ({ req: { user } }: { req: { user: unknown } }) => Boolean(use
  */
 export const InviteRequests: CollectionConfig = {
   slug: "invite-requests",
+  labels: { singular: "Invite Request", plural: "Invite Requests" },
   admin: {
     group: "Leads",
     useAsTitle: "username",
@@ -26,6 +33,12 @@ export const InviteRequests: CollectionConfig = {
   },
   defaultSort: "-createdAt",
   timestamps: true,
+  hooks: {
+    beforeValidate: [inviteBeforeValidate],
+    beforeChange: [inviteBeforeChange],
+    afterChange: [inviteAfterChange],
+    afterOperation: [inviteAfterOperation],
+  },
   fields: [
     {
       name: "username",
@@ -46,7 +59,11 @@ export const InviteRequests: CollectionConfig = {
       required: true,
       defaultValue: "new",
       index: true,
-      admin: { position: "sidebar" },
+      admin: {
+        position: "sidebar",
+        description:
+          "Lifecycle, set automatically. Filter by 'Email failed' to find leads whose owner notification didn't send; mark 'Spam' to flag abuse.",
+      },
       options: [
         { label: "New", value: "new" },
         { label: "Emailed owner", value: "emailed" },
