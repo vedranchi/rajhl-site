@@ -1,7 +1,52 @@
-import { beats, kits, socials, about } from "@/data/content";
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  beats,
+  kits,
+  socials,
+  about,
+  channelBadges,
+  beatstarsStore,
+  catalogueTotals,
+  catalogueShown,
+  hasMoreBeats,
+  hasMoreKits,
+} from "@/data/content";
 import { SocialIcon } from "./icons";
 
+/** Real external links open in a new tab; "#" placeholders stay in-page. */
+function ext(url: string) {
+  return url.startsWith("http")
+    ? { target: "_blank" as const, rel: "noopener noreferrer" }
+    : {};
+}
+
 export function BeatsPanel() {
+  // Mirrors the transport's state (see Player.tsx) so the row for whatever
+  // is actually loaded/playing gets highlighted, even when playback started
+  // from the transport itself or the Play menu, not a row click.
+  const [current, setCurrent] = useState({ index: 0, playing: false });
+
+  useEffect(() => {
+    const h = (e: Event) => {
+      const detail = (e as CustomEvent<{ index: number; playing: boolean }>).detail;
+      if (detail) setCurrent(detail);
+    };
+    window.addEventListener("lr:track-changed", h);
+    return () => window.removeEventListener("lr:track-changed", h);
+  }, []);
+
+  // Clicking the currently-playing row's button toggles it; any other row
+  // loads and starts playing that beat.
+  function handleRowPlay(index: number) {
+    if (index === current.index) {
+      window.dispatchEvent(new CustomEvent("lr:toggle-play"));
+    } else {
+      window.dispatchEvent(new CustomEvent("lr:play-track", { detail: { index } }));
+    }
+  }
+
   return (
     <>
       <div className="lcd">
@@ -24,25 +69,42 @@ export function BeatsPanel() {
         <div className="lhead">
           <span>#</span>
           <span>Title</span>
-          <span>BPM</span>
-          <span className="h-key">Key</span>
+          <span className="h-plays">Plays</span>
           <span>Time</span>
           <span className="h-buy">License</span>
         </div>
-        {beats.map((b) => (
-          <div className={`row ${b.playing ? "playing" : ""}`} key={b.title}>
-            <span className="num">{b.n}</span>
+        {beats.map((b, i) => {
+          const isCurrent = i === current.index;
+          const isPlaying = isCurrent && current.playing;
+          return (
+          <div className={`row ${isPlaying ? "playing" : ""}`} key={b.title}>
+            <button
+              type="button"
+              className="num"
+              onClick={() => handleRowPlay(i)}
+              aria-label={isPlaying ? `Pause ${b.title}` : `Play ${b.title}`}
+            >
+              {isCurrent ? (isPlaying ? "⏸" : "▶") : String(i + 1).padStart(2, "0")}
+            </button>
             <span className="ttl">{b.title}</span>
-            <span className="mut">{b.bpm}</span>
-            <span className="mut r-key">{b.key}</span>
+            <span className="mut r-plays">▶ {b.plays.toLocaleString()}</span>
             <span className="mut">{b.time}</span>
-            <a className="buy" href={b.buyUrl}>
+            <a className="buy" href={b.buyUrl} {...ext(b.buyUrl)}>
               [BUY ↗]
             </a>
           </div>
-        ))}
+          );
+        })}
       </div>
-      <p className="listhint">» Double-click a track to preview · checkout &amp; licensing handled on BeatStars</p>
+      <p className="listhint">
+        » Top {catalogueShown.beats} by plays · checkout &amp; licensing handled on BeatStars
+      </p>
+      {hasMoreBeats ? (
+        <a className="browseall" href={beatstarsStore} target="_blank" rel="noopener noreferrer">
+          <span>Browse all {catalogueTotals.beats.toLocaleString()} beats on BeatStars</span>
+          <span className="arr">↗</span>
+        </a>
+      ) : null}
     </>
   );
 }
@@ -61,13 +123,19 @@ export function KitsPanel() {
             </div>
             <span className="spacer" />
             <span className="kmeta">{k.price}</span>
-            <a className="btn accent" href={k.buyUrl}>
+            <a className="btn accent" href={k.buyUrl} {...ext(k.buyUrl)}>
               GET
             </a>
           </div>
         ))}
       </div>
       <p className="listhint">» Instant download after checkout · same sounds used across the catalogue</p>
+      {hasMoreKits ? (
+        <a className="browseall" href={beatstarsStore} target="_blank" rel="noopener noreferrer">
+          <span>Browse all {catalogueTotals.kits.toLocaleString()} kits on BeatStars</span>
+          <span className="arr">↗</span>
+        </a>
+      ) : null}
     </>
   );
 }
@@ -78,7 +146,7 @@ export function ChannelsPanel() {
       <h2 className="blocktitle">&gt; My Links</h2>
       <div className="links">
         {socials.map((s) => (
-          <a className="linkbtn" href={s.url} key={s.name}>
+          <a className="linkbtn" href={s.url} key={s.name} {...ext(s.url)}>
             <span className="g">
               <SocialIcon kind={s.icon} />
             </span>
@@ -90,11 +158,12 @@ export function ChannelsPanel() {
           </a>
         ))}
       </div>
-      <div className="badges" aria-hidden="true">
-        <span className="badge88">SUBSCRIBE ►</span>
-        <span className="badge88">FOLLOW ★</span>
-        <span className="badge88">JOIN ✈</span>
-        <span className="badge88">BEATSTARS ♪</span>
+      <div className="badges">
+        {channelBadges.map((b) => (
+          <a className="badge88" href={b.url} key={b.label} target="_blank" rel="noopener noreferrer">
+            {b.label}
+          </a>
+        ))}
       </div>
     </>
   );
@@ -118,7 +187,7 @@ export function AboutPanel() {
             ))}
             <div className="srow">
               <span className="sk">Status</span>
-              <span className="sv" style={{ color: "#7fe0a4" }}>
+              <span className="sv" style={{ color: "var(--led)" }}>
                 ● {about.status}
               </span>
             </div>

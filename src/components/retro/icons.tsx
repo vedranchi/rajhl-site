@@ -28,8 +28,22 @@ export function TelegramIcon({ className }: IconProps) {
   );
 }
 
+export function BeatStarsIcon({ className }: IconProps) {
+  // Waveform bars — reads as "beats" without borrowing the trademarked logo.
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="2.5" y="9" width="2.6" height="6" rx="1" />
+      <rect x="7" y="5" width="2.6" height="14" rx="1" />
+      <rect x="11.5" y="2" width="2.6" height="20" rx="1" />
+      <rect x="16" y="6" width="2.6" height="12" rx="1" />
+      <rect x="20.5" y="10" width="2.6" height="4" rx="1" />
+    </svg>
+  );
+}
+
 export function SocialIcon({ kind, className }: { kind: SocialKind; className?: string }) {
   if (kind === "youtube") return <YouTubeIcon className={className} />;
   if (kind === "instagram") return <InstagramIcon className={className} />;
+  if (kind === "beatstars") return <BeatStarsIcon className={className} />;
   return <TelegramIcon className={className} />;
 }

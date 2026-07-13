@@ -1,8 +1,10 @@
-import { Window, MenuBar, Marquee, Transport } from "./chrome";
+import { Window, Marquee } from "./chrome";
+import { MenuBar } from "./MenuBar";
+import { Player } from "./Player";
 import { Tabs } from "./Tabs";
 import { StatusBar } from "./StatusBar";
 import { BeatsPanel, KitsPanel, ChannelsPanel, AboutPanel } from "./panels";
-import { marqueeItems, nowPlaying } from "@/data/content";
+import { marqueeItems, catalogueTotals } from "@/data/content";
 
 export function PlayerWindow() {
   return (
@@ -17,13 +19,8 @@ export function PlayerWindow() {
           { id: "about", label: "☺ About", content: <AboutPanel /> },
         ]}
       />
-      <Transport
-        title={nowPlaying.title}
-        artist={nowPlaying.artist}
-        elapsed={nowPlaying.elapsed}
-        total={nowPlaying.total}
-      />
-      <StatusBar beats={24} kits={3} />
+      <Player />
+      <StatusBar beats={catalogueTotals.beats} kits={catalogueTotals.kits} />
     </Window>
   );
 }
