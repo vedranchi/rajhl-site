@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-11T18:22:55.283Z",
+  "_generatedAt": "2026-07-13T14:25:11.725Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 765,
+      "plays": 770,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -32,7 +32,7 @@
       "n": "02",
       "title": "fakemink + feng type beat - \"on the line\"",
       "time": "01:24",
-      "plays": 734,
+      "plays": 736,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
       "stream": "https://main.v2.beatstars.com/stream?id=24146021&return=audio",
       "playing": false
@@ -41,7 +41,7 @@
       "n": "03",
       "title": "fakemink + suzy sheer + snow strippers type beat \"leave now\"",
       "time": "02:21",
-      "plays": 605,
+      "plays": 606,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
       "stream": "https://main.v2.beatstars.com/stream?id=24210831&return=audio",
       "playing": false
@@ -59,7 +59,7 @@
       "n": "05",
       "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
       "time": "02:05",
-      "plays": 519,
+      "plays": 520,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
       "stream": "https://main.v2.beatstars.com/stream?id=23567398&return=audio",
       "playing": false
@@ -86,7 +86,7 @@
       "n": "08",
       "title": "fakemink + puresnow type beat - \"on me\"",
       "time": "02:44",
-      "plays": 447,
+      "plays": 446,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
       "stream": "https://main.v2.beatstars.com/stream?id=24872873&return=audio",
       "playing": false
@@ -95,7 +95,7 @@
       "n": "09",
       "title": "fakemink + 2016 type beat - \"prayed for this\"",
       "time": "01:24",
-      "plays": 388,
+      "plays": 389,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-2016-type-beat-prayed-for-this-24260596",
       "stream": "https://main.v2.beatstars.com/stream?id=24260596&return=audio",
       "playing": false
@@ -118,16 +118,16 @@
       "buyUrl": "https://www.beatstars.com/sound-kits/sepia-sound-kit-273403"
     },
     {
-      "file": "#LSK SOUND KIT",
-      "meta": "A sound kit that i use daily to create nostalgic 2016… · royalty-free",
-      "price": "$20",
-      "buyUrl": "https://www.beatstars.com/sound-kits/lsk-sound-kit-266990"
-    },
-    {
       "file": "LUKARAJHL STASH KIT",
       "meta": "A stash kit that i use daily to create electronic /… · royalty-free",
       "price": "$20",
       "buyUrl": "https://www.beatstars.com/sound-kits/lukarajhl-stash-kit-261066"
+    },
+    {
+      "file": "#LSK SOUND KIT",
+      "meta": "A sound kit that i use daily to create nostalgic 2016… · royalty-free",
+      "price": "$20",
+      "buyUrl": "https://www.beatstars.com/sound-kits/lsk-sound-kit-266990"
     },
     {
       "file": "BUNDLE KIT (#LSK SOUND KIT + LUKARAJHL STASH KIT)",
