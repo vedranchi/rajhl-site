@@ -49,7 +49,12 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || "",
+      // Local dev sets DATABASE_URL by hand; on Vercel the Supabase integration
+      // injects POSTGRES_URL instead (it never creates DATABASE_URL). Fall back
+      // so the app works against a stock Supabase↔Vercel setup with no manual
+      // env plumbing — and so a rotated integration credential is picked up.
+      connectionString:
+        process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
     },
   }),
   // Cast: sharp's overloaded default export isn't structurally assignable to
