@@ -7,6 +7,7 @@ import type {
 import type { InviteRequest } from "@/payload-types";
 import { validateInvite } from "@/lib/validate-invite";
 import { sendInviteEmail } from "@/lib/invite-email";
+import { envInt } from "@/lib/env";
 
 /**
  * Collection hooks for `invite-requests`. Data-integrity and side-effect logic
@@ -21,7 +22,7 @@ const USER_AGENT_MAX = 500;
 /** How far back a same-email lead counts as a duplicate (default 24h, env-tunable). */
 const DEFAULT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1_000;
 function dedupeWindowMs(): number {
-  return Number(process.env.INVITE_DEDUPE_WINDOW_MS) || DEFAULT_DEDUPE_WINDOW_MS;
+  return envInt(process.env.INVITE_DEDUPE_WINDOW_MS, DEFAULT_DEDUPE_WINDOW_MS);
 }
 
 /**
