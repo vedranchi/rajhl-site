@@ -147,11 +147,16 @@ system, below).
   unaffected** — reverified 2026-07-12 via `pnpm build` + `pnpm start`:
   `POST /api/graphql` returns real data (`{"data":{"__typename":"Query"}}`). Test GraphQL
   against a prod server, don't chase the dev 500.
-- **Invite-requests access control VERIFIED (2026-07-11, prod build):** anonymous
-  `GET`/`POST`/`PATCH`/`DELETE /api/invite-requests` → 403; GraphQL `createInviteRequest` →
-  403-in-envelope. The `create: () => false` keystone works; server-action writes go through
-  the Local API (`overrideAccess` default). See §12/§14 of
-  `docs/plans/private-group-invite-payload-plan.md`.
+- **Invite-requests access control VERIFIED (2026-07-11 local prod build; re-verified against
+  DEPLOYED Production 2026-07-13):** anonymous `GET`/`POST /api/invite-requests` → 403
+  (`"You are not allowed to perform this action."`), `PATCH`/`DELETE` → 400 (missing-id, no
+  unauthorized write); GraphQL `createInviteRequest` → 403-in-envelope. `/admin` and `/` both
+  200. The `create: () => false` keystone works; server-action writes go through the Local API
+  (`overrideAccess` default). See §12/§14 of
+  `docs/plans/private-group-invite-payload-plan.md`. **Not yet exercised end-to-end on the
+  deployed site:** live form submit → row + Resend email, dedupe, and rate-limit — these run
+  through a React-dispatched server action (no plain REST/curl path) and need a real browser
+  submission or an authorized prod-DB read to confirm.
 - **Supabase project is live and wired to Vercel (done 2026-07-11):** project ref
   `dgaiclbbmmqylvtajetc`, connected via the Vercel↔Supabase marketplace integration under
   Vercel project `vedran-chichov/rajhl-site`. This auto-injected `POSTGRES_*` / `SUPABASE_*`
@@ -163,6 +168,29 @@ system, below).
   now pushes schema against the live production DB**, there's no separate dev database yet.
   First Payload admin user was created via the browser at `/admin`. Revisit whether
   dev/preview need their own DB before this matters (e.g. before seeding test data at volume).
+- **Payload prod-DB connection GOTCHAS (fixed 2026-07-13, PRs #3–#5) — production `/admin` +
+  `/api/*` had 500'd since first deploy; three chained causes, all in `src/payload.config.ts`:**
+  1. **`PAYLOAD_SECRET` was never set on Vercel Production** (only local `.env`) → Payload
+     `init` threw `missing secret key`. Added it to Vercel Prod, **reusing the exact local
+     value** so it matches the secret that signed the existing admin user's JWT. `secret:`
+     still reads `process.env.PAYLOAD_SECRET || ""` — the `|| ""` masks a missing secret as a
+     deep runtime error instead of a loud boot failure; harden later.
+  2. **The config read `process.env.DATABASE_URL`, which does NOT exist on Vercel.** The
+     Supabase↔Vercel integration injects **`POSTGRES_URL`** (+ `POSTGRES_URL_NON_POOLING`,
+     etc.), never `DATABASE_URL` — that name only exists because local `.env` sets it by hand.
+     Fix: `connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL || ""` (local
+     still wins locally; prod falls through to the integration-managed var → survives credential
+     rotation, no duplicate pinned secret).
+  3. **Supabase's cert is self-signed AND `POSTGRES_URL` carries `sslmode=require`.** Recent
+     node-postgres coerces `require`→`verify-full`, so it rejects the chain
+     (`self-signed certificate in certificate chain`). **Setting `ssl: { rejectUnauthorized:
+     false }` alone did NOT fix it** — the `sslmode` string param **overrides** the explicit
+     `ssl` option. Fix: a `pgConnectionString()` helper that **strips `sslmode`/`ssl` from the
+     URL** so the explicit `ssl` option applies (TLS stays on; only the chain check is skipped).
+     Verified against the live DB: `require`-only and `require`+`ssl`-object both fail;
+     stripped+`ssl`-object connects (`select 1` → ok). Local `DATABASE_URL` (pooler, no
+     `sslmode`) never hit this. Hardened alternative if full verification is wanted later:
+     bundle Supabase's CA and pass `ssl: { ca }`.
 
 ### Artifacts / design previews
 - Artifact CSP **blocks external fonts/images/scripts** — inline everything (data URIs). For
