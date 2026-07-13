@@ -6,8 +6,8 @@ name: Refresh BeatStars catalogue
 # locally — the live site still never calls BeatStars itself.
 #
 # NOTE: scheduled workflows only fire from the DEFAULT branch's copy of this file.
-# It checks out + pushes to `test-prod` (the current deploy branch). When a
-# production branch is finalised in Vercel, change `BRANCH` below to match.
+# It checks out + pushes to `main` (the Vercel production branch), so each refresh
+# redeploys production. If the production branch changes, update `BRANCH` to match.
 
 on:
   schedule:
@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BRANCH: test-prod
+  BRANCH: main
 
 jobs:
   refresh:
