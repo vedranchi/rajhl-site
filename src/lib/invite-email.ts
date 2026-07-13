@@ -32,14 +32,25 @@ export async function sendInviteEmail(doc: InviteEmailInput): Promise<SendInvite
   const skopje = created.toLocaleString("en-GB", { timeZone: "Europe/Skopje", hour12: false });
 
   const text = [
-    `${username} requested access to your Inner Circle.`,
+    "Username",
+    "--------",
+    username,
     "",
-    `Username:  ${username}`,
-    `Email:     ${email}`,
-    `Timestamp: ${created.toISOString()} (UTC) · ${skopje} (Skopje)`,
-    `IP:        ${ip || "unavailable"}`,
+    "Email",
+    "-----",
+    email,
     "",
-    "— lukarajhl.com invite form (reply to answer the requester directly)",
+    "Requested At",
+    "------------",
+    `${created.toISOString()} (UTC) · ${skopje} (Skopje)`,
+    "",
+    "IP Address",
+    "----------",
+    ip || "unavailable",
+    "",
+    `${username} has requested access to your Inner Circle.`,
+    "",
+    "You can follow up with them directly using the email above.",
   ].join("\n");
 
   try {
