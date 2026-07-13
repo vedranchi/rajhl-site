@@ -30,6 +30,31 @@ const hasS3 =
   !!process.env.S3_SECRET_ACCESS_KEY &&
   !!process.env.S3_ENDPOINT;
 
+/**
+ * Postgres connection string. Local dev sets DATABASE_URL by hand; on Vercel the
+ * Supabase integration injects POSTGRES_URL instead (it never creates
+ * DATABASE_URL), so fall back to it — this keeps the app working against a stock
+ * Supabase↔Vercel setup and survives credential rotation.
+ *
+ * The integration's URL carries `sslmode=require`, which recent node-postgres
+ * coerces to `verify-full` and then rejects Supabase's self-signed cert chain —
+ * and that string param overrides the pool's explicit `ssl` option. Strip
+ * `sslmode` so our `ssl: { rejectUnauthorized: false }` governs (TLS stays on,
+ * only the chain check is skipped).
+ */
+function pgConnectionString(): string {
+  const raw = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+  if (!raw) return raw;
+  try {
+    const url = new URL(raw);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("ssl");
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -49,17 +74,10 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      // Local dev sets DATABASE_URL by hand; on Vercel the Supabase integration
-      // injects POSTGRES_URL instead (it never creates DATABASE_URL). Fall back
-      // so the app works against a stock Supabase↔Vercel setup with no manual
-      // env plumbing — and so a rotated integration credential is picked up.
-      connectionString:
-        process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
-      // Supabase presents a self-signed cert chain. The integration's
-      // POSTGRES_URL carries `sslmode=require`, which recent node-postgres
-      // coerces to `verify-full` and then rejects ("self-signed certificate in
-      // certificate chain"). Keep the connection TLS-encrypted but skip the
-      // chain check so Production can connect to the managed Supabase pooler.
+      // See pgConnectionString() above: resolves DATABASE_URL → POSTGRES_URL and
+      // strips `sslmode` so the explicit ssl option below is what applies.
+      connectionString: pgConnectionString(),
+      // TLS stays on; only Supabase's self-signed chain check is skipped.
       ssl: { rejectUnauthorized: false },
     },
   }),
