@@ -55,6 +55,12 @@ export default buildConfig({
       // env plumbing — and so a rotated integration credential is picked up.
       connectionString:
         process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
+      // Supabase presents a self-signed cert chain. The integration's
+      // POSTGRES_URL carries `sslmode=require`, which recent node-postgres
+      // coerces to `verify-full` and then rejects ("self-signed certificate in
+      // certificate chain"). Keep the connection TLS-encrypted but skip the
+      // chain check so Production can connect to the managed Supabase pooler.
+      ssl: { rejectUnauthorized: false },
     },
   }),
   // Cast: sharp's overloaded default export isn't structurally assignable to
