@@ -52,7 +52,10 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
   const { username, email } = validated;
 
   const hdrs = await headers();
-  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "";
+  // Prefer x-real-ip: on Vercel it's the edge-set true client IP. The leftmost
+  // x-forwarded-for hop is client-settable, so trusting it first let the per-IP
+  // rate limit be bypassed with a spoofed header. Fall back to XFF only if absent.
+  const ip = hdrs.get("x-real-ip")?.trim() || hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
   const userAgent = hdrs.get("user-agent")?.slice(0, 500) || "";
 
   const payload = await getPayloadClient();
