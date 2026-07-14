@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-13T19:18:53.835Z",
+  "_generatedAt": "2026-07-14T02:04:36.997Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -124,16 +124,16 @@
       "buyUrl": "https://www.beatstars.com/sound-kits/lukarajhl-stash-kit-261066"
     },
     {
-      "file": "#LSK SOUND KIT",
-      "meta": "A sound kit that i use daily to create nostalgic 2016… · royalty-free",
-      "price": "$20",
-      "buyUrl": "https://www.beatstars.com/sound-kits/lsk-sound-kit-266990"
-    },
-    {
       "file": "BUNDLE KIT (#LSK SOUND KIT + LUKARAJHL STASH KIT)",
       "meta": "A complete production bundle featuring every sound i use… · royalty-free",
       "price": "$30",
       "buyUrl": "https://www.beatstars.com/sound-kits/bundle-kit-lsk-sound-kit--lukarajhl-stash-kit-268177"
+    },
+    {
+      "file": "#LSK SOUND KIT",
+      "meta": "A sound kit that i use daily to create nostalgic 2016… · royalty-free",
+      "price": "$20",
+      "buyUrl": "https://www.beatstars.com/sound-kits/lsk-sound-kit-266990"
     }
   ]
 }
