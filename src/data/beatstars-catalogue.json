@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-14T13:25:09.421Z",
+  "_generatedAt": "2026-07-14T19:13:29.750Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -77,7 +77,7 @@
       "n": "07",
       "title": "fakemink + feng type beat - \"white noise\"",
       "time": "01:50",
-      "plays": 458,
+      "plays": 459,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-white-noise-24469816",
       "stream": "https://main.v2.beatstars.com/stream?id=24469816&return=audio",
       "playing": false
