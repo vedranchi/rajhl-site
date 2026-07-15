@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-15T08:01:28.710Z",
+  "_generatedAt": "2026-07-15T13:27:45.864Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -32,7 +32,7 @@
       "n": "02",
       "title": "fakemink + feng type beat - \"on the line\"",
       "time": "01:24",
-      "plays": 739,
+      "plays": 740,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
       "stream": "https://main.v2.beatstars.com/stream?id=24146021&return=audio",
       "playing": false
