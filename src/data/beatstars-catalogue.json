@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-17T08:03:03.245Z",
+  "_generatedAt": "2026-07-17T13:19:02.523Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
