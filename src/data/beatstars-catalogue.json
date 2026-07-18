@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-18T02:03:43.529Z",
+  "_generatedAt": "2026-07-18T07:42:42.016Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 779,
+      "plays": 781,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -32,7 +32,7 @@
       "n": "02",
       "title": "fakemink + feng type beat - \"on the line\"",
       "time": "01:24",
-      "plays": 743,
+      "plays": 744,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
       "stream": "https://main.v2.beatstars.com/stream?id=24146021&return=audio",
       "playing": false
@@ -68,7 +68,7 @@
       "n": "06",
       "title": "fakemink + suzy sheer type beat - \"manifest\"",
       "time": "01:33",
-      "plays": 511,
+      "plays": 512,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-type-beat-manifest-24552914",
       "stream": "https://main.v2.beatstars.com/stream?id=24552914&return=audio",
       "playing": false
