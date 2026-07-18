@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-17T19:01:21.236Z",
+  "_generatedAt": "2026-07-18T02:03:43.529Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 778,
+      "plays": 779,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -41,7 +41,7 @@
       "n": "03",
       "title": "fakemink + suzy sheer + snow strippers type beat \"leave now\"",
       "time": "02:21",
-      "plays": 607,
+      "plays": 608,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
       "stream": "https://main.v2.beatstars.com/stream?id=24210831&return=audio",
       "playing": false
@@ -50,7 +50,7 @@
       "n": "04",
       "title": "fakemink + feng type beat - \"why did you leave?\"",
       "time": "01:33",
-      "plays": 530,
+      "plays": 531,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
       "stream": "https://main.v2.beatstars.com/stream?id=24632696&return=audio",
       "playing": false
