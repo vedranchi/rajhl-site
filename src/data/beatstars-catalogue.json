@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-18T13:05:45.833Z",
+  "_generatedAt": "2026-07-18T18:57:31.603Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 781,
+      "plays": 783,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -41,7 +41,7 @@
       "n": "03",
       "title": "fakemink + suzy sheer + snow strippers type beat \"leave now\"",
       "time": "02:21",
-      "plays": 608,
+      "plays": 609,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-suzy-sheer-snow-strippers-type-beat-leave-now-24210831",
       "stream": "https://main.v2.beatstars.com/stream?id=24210831&return=audio",
       "playing": false
@@ -86,7 +86,7 @@
       "n": "08",
       "title": "fakemink + puresnow type beat - \"on me\"",
       "time": "02:44",
-      "plays": 446,
+      "plays": 447,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
       "stream": "https://main.v2.beatstars.com/stream?id=24872873&return=audio",
       "playing": false
