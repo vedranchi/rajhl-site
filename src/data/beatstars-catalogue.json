@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-20T02:35:50.556Z",
+  "_generatedAt": "2026-07-20T08:51:00.554Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -50,7 +50,7 @@
       "n": "04",
       "title": "fakemink + feng type beat - \"why did you leave?\"",
       "time": "01:33",
-      "plays": 531,
+      "plays": 532,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
       "stream": "https://main.v2.beatstars.com/stream?id=24632696&return=audio",
       "playing": false
