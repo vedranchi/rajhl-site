@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-23T19:08:44.231Z",
+  "_generatedAt": "2026-07-24T02:16:54.548Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 806,
+      "plays": 807,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -59,7 +59,7 @@
       "n": "05",
       "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
       "time": "02:05",
-      "plays": 524,
+      "plays": 525,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
       "stream": "https://main.v2.beatstars.com/stream?id=23567398&return=audio",
       "playing": false
@@ -95,7 +95,7 @@
       "n": "09",
       "title": "fakemink + 2016 type beat - \"prayed for this\"",
       "time": "01:24",
-      "plays": 389,
+      "plays": 390,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-2016-type-beat-prayed-for-this-24260596",
       "stream": "https://main.v2.beatstars.com/stream?id=24260596&return=audio",
       "playing": false
