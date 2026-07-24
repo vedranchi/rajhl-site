@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-24T08:20:34.670Z",
+  "_generatedAt": "2026-07-24T13:27:45.207Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -95,7 +95,7 @@
       "n": "09",
       "title": "fakemink + 2016 type beat - \"prayed for this\"",
       "time": "01:24",
-      "plays": 390,
+      "plays": 391,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-2016-type-beat-prayed-for-this-24260596",
       "stream": "https://main.v2.beatstars.com/stream?id=24260596&return=audio",
       "playing": false
