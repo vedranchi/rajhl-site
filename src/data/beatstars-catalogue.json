@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-24T02:16:54.548Z",
+  "_generatedAt": "2026-07-24T08:20:34.670Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 807,
+      "plays": 808,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -32,7 +32,7 @@
       "n": "02",
       "title": "fakemink + feng type beat - \"on the line\"",
       "time": "01:24",
-      "plays": 747,
+      "plays": 749,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-on-the-line-24146021",
       "stream": "https://main.v2.beatstars.com/stream?id=24146021&return=audio",
       "playing": false
