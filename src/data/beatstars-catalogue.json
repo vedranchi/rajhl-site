@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-27T09:42:31.219Z",
+  "_generatedAt": "2026-07-27T14:23:41.713Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 833,
+      "plays": 834,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
@@ -50,7 +50,7 @@
       "n": "04",
       "title": "fakemink + feng type beat - \"why did you leave?\"",
       "time": "01:33",
-      "plays": 535,
+      "plays": 536,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-why-did-you-leave-24632696",
       "stream": "https://main.v2.beatstars.com/stream?id=24632696&return=audio",
       "playing": false
@@ -59,7 +59,7 @@
       "n": "05",
       "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
       "time": "02:05",
-      "plays": 527,
+      "plays": 529,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
       "stream": "https://main.v2.beatstars.com/stream?id=23567398&return=audio",
       "playing": false
@@ -86,7 +86,7 @@
       "n": "08",
       "title": "fakemink + puresnow type beat - \"on me\"",
       "time": "02:44",
-      "plays": 453,
+      "plays": 454,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
       "stream": "https://main.v2.beatstars.com/stream?id=24872873&return=audio",
       "playing": false
