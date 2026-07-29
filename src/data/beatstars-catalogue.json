@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-29T08:33:13.823Z",
+  "_generatedAt": "2026-07-29T14:00:34.981Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -86,7 +86,7 @@
       "n": "08",
       "title": "fakemink + puresnow type beat - \"on me\"",
       "time": "02:44",
-      "plays": 455,
+      "plays": 456,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-type-beat-on-me-24872873",
       "stream": "https://main.v2.beatstars.com/stream?id=24872873&return=audio",
       "playing": false
