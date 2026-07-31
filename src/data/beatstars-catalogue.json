@@ -1,10 +1,10 @@
 {
-  "_generatedAt": "2026-07-30T19:19:17.192Z",
+  "_generatedAt": "2026-07-31T02:26:02.091Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
   "totals": {
-    "beats": 234,
+    "beats": 235,
     "kits": 4
   },
   "shown": {
@@ -23,7 +23,7 @@
       "n": "▶",
       "title": "fakemink + puresnow + 2016 type beat - \"gold glitter\"",
       "time": "03:02",
-      "plays": 844,
+      "plays": 845,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-puresnow-2016-type-beat-gold-glitter-24727214",
       "stream": "https://main.v2.beatstars.com/stream?id=24727214&return=audio",
       "playing": true
