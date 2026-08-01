@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-31T19:18:27.476Z",
+  "_generatedAt": "2026-08-01T02:26:32.585Z",
   "_source": "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
   "_popularityMetric": "activities.play (BeatStars play count)",
   "store": "https://www.beatstars.com/rajhl",
@@ -59,7 +59,7 @@
       "n": "05",
       "title": "ESDEEKID X FIMIGERRERO TYPE BEAT - \"PRAGUE\"",
       "time": "02:05",
-      "plays": 529,
+      "plays": 530,
       "buyUrl": "https://www.beatstars.com/beat/esdeekid-x-fimigerrero-type-beat-prague-23567398",
       "stream": "https://main.v2.beatstars.com/stream?id=23567398&return=audio",
       "playing": false
@@ -104,7 +104,7 @@
       "n": "10",
       "title": "fakemink + feng type beat - \"closer\"",
       "time": "01:38",
-      "plays": 351,
+      "plays": 352,
       "buyUrl": "https://www.beatstars.com/beat/fakemink-feng-type-beat-closer-23967753",
       "stream": "https://main.v2.beatstars.com/stream?id=23967753&return=audio",
       "playing": false
