@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { validateInvite } from "@/lib/validate-invite";
 import { getPayloadClient } from "@/lib/payload";
+import { envInt } from "@/lib/env";
 
 /**
  * Server action for the private-group invite form.
@@ -23,8 +24,8 @@ import { getPayloadClient } from "@/lib/payload";
 export type InviteResult = { ok: true } | { ok: false; error: string };
 
 const MIN_FILL_MS = 3_000; // submissions faster than this are bots
-const RATE_LIMIT = Number(process.env.INVITE_RATE_LIMIT) || 3; // creates per IP…
-const RATE_WINDOW_MS = Number(process.env.INVITE_RATE_WINDOW_MS) || 60 * 60 * 1_000; // …per hour
+const RATE_LIMIT = envInt(process.env.INVITE_RATE_LIMIT, 3); // creates per IP…
+const RATE_WINDOW_MS = envInt(process.env.INVITE_RATE_WINDOW_MS, 60 * 60 * 1_000); // …per hour
 
 export async function requestInvite(formData: FormData): Promise<InviteResult> {
   // Honeypot: humans never see/fill this field. Pretend success so bots move on.
@@ -51,7 +52,10 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
   const { username, email } = validated;
 
   const hdrs = await headers();
-  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "";
+  // Prefer x-real-ip: on Vercel it's the edge-set true client IP. The leftmost
+  // x-forwarded-for hop is client-settable, so trusting it first let the per-IP
+  // rate limit be bypassed with a spoofed header. Fall back to XFF only if absent.
+  const ip = hdrs.get("x-real-ip")?.trim() || hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
   const userAgent = hdrs.get("user-agent")?.slice(0, 500) || "";
 
   const payload = await getPayloadClient();
