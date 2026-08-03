@@ -1,8 +1,9 @@
 # CLAUDE.md — working rules for this repo
 
 > **Auto-loaded each session.** This is the living rules/restrictions file — **append new
-> rules, patterns, and gotchas as they emerge.** For current status & next steps see
-> `HANDOFF.md`. Full plan: `~/.claude/plans/i-am-building-a-tender-rivest.md`.
+> rules, patterns, and gotchas as they emerge.** For current status & next steps see the
+> latest file in `docs/handoffs/` (gitignored, local-only — no `HANDOFF.md` at repo root).
+> Full plan: `~/.claude/plans/i-am-building-a-tender-rivest.md`.
 
 ## What this is
 Website for **Luka Rajhl** (beat producer, Skopje) — the user's first client — built as the
@@ -14,7 +15,8 @@ system, below).
 - **Next.js 16 (App Router) + TypeScript**, **Tailwind + shadcn/ui**, **Payload 3** (CMS,
   embedded, `/admin`), **Supabase** (Postgres + Storage), **Vercel**. Package manager
   **pnpm**.
-- ESLint + Prettier, conventional commits, Playwright smoke tests, typed env, `.env.example`.
+- ESLint (no Prettier configured), conventional commits, Vitest unit tests (no Playwright/e2e
+  set up yet — aspirational, not present), typed env, `.env.example`.
 - `src/` dir; import alias `@/*`.
 
 ## Hard rules / restrictions (learned)
@@ -50,13 +52,26 @@ system, below).
   Gotchas: the `bsta.rs/k/<id>/` kit short-link redirects to a *private* pro-page — use the
   v2 `relative_uri` (`/sound-kits/<slug>`) instead; Algolia rejects requests without the
   Referer header.
-- **Auto-refresh:** `.github/workflows/refresh-catalogue.yml` runs the fetch script every 6h
-  (+ manual dispatch), commits the JSON if it changed, and pushes to `test-prod` → Vercel
-  redeploys. This is how the top-10 re-ranks automatically as plays change / new kits appear.
-  **Scheduled workflows only fire from the DEFAULT branch's copy of the file** — it activates
-  once `test-prod` merges to `main`; until then use *Run workflow*. Update `BRANCH` when the
-  Vercel production branch is finalised. The UI shows only the top 10; a **"Browse all N on
-  BeatStars" CTA** (`.browseall`) links out for the rest — this is the "clean hand-off."
+- **Auto-refresh:** `.github/workflows/refresh-catalogue.yml` runs the fetch script **twice
+  daily** (`0 6,18 * * *`, + manual dispatch) and, if the JSON changed, lands it on `main` →
+  Vercel redeploys. This is how the top-10 re-ranks automatically as plays change / new kits
+  appear. **Scheduled workflows only fire from the DEFAULT branch's copy of the file.** The
+  UI shows only the top 10; a **"Browse all N on BeatStars" CTA** (`.browseall`) links out
+  for the rest — this is the "clean hand-off."
+- **`main` is a PROTECTED branch — the refresh job must NOT `git push` to it (fixed
+  2026-08-03).** From 2026-08-01 (when PR #6 flipped `BRANCH` from `test-prod` to `main`)
+  until this fix, **every scheduled run failed** with
+  `remote: error: GH006: Protected branch update failed … Changes must be made through a
+  pull request`, silently freezing production on the 2026-07-11 catalogue snapshot (228
+  beats vs 235 actual) for three days. Nothing surfaces this but the Actions tab — **if the
+  live "Browse all N beats" number looks stale, check `gh run list` first.** Fix: the job
+  force-pushes its one commit to a disposable `chore/catalogue-refresh` branch, opens a PR,
+  and `gh pr merge --squash --delete-branch`es it with `GITHUB_TOKEN`. Merging a PR
+  satisfies the protection rule (`required_approving_review_count: 0`, no required status
+  checks, `require_last_push_approval: false`) with **no PAT and no bypass allowance to
+  maintain** — needs `permissions: contents: write` **+ `pull-requests: write`**. If a
+  future protection change blocks the merge too, add a bypass allowance for the repo admin
+  in GitHub settings rather than reintroducing a direct push.
 - **Browser audio = the most-popular beat.** The stable redirect endpoint
   `https://main.v2.beatstars.com/stream?id=<numericId>&return=audio` 302s to a fresh signed
   S3 mp3 each request (so it never expires). The transport plays it as **plain opaque
@@ -110,7 +125,21 @@ system, below).
   `react-hooks/purity` forbids `Date.now()`/`new Date()` in render — hoist to module scope.
 
 ### Build / ops
-- **Payload on Vercel is serverless — no local disk.** Use the Postgres adapter (Supabase) +
+- **Payload's surface is deliberately small: `Users` + `InviteRequests`, nothing else
+  (trimmed 2026-08-03).** `Beats`, `Kits`, `Channels`, `Media` and a `SiteSettings` global
+  were fully modeled and registered but **nothing ever read them** — there is not one
+  `payload.find` / `payload.findGlobal` call in the app; the public site renders from
+  `src/data/content.ts` + `src/data/beatstars-catalogue.json`, and BeatStars (not the CMS) is
+  the source of truth for beats/kits. They were also `read: () => true`, i.e. publicly
+  readable empty endpoints. All five were verified empty against live prod (`totalDocs: 0`)
+  and deleted. **Don't re-add a CMS mirror of `content.ts` without wiring the site to read
+  it.** After any collection change run **both** `pnpm generate:types` and
+  `pnpm generate:importmap`.
+- **No uploads → no storage adapter.** `@payloadcms/storage-s3` was removed with `Media` (it
+  was only ever attached to `collections: { media: true }`), along with the four `S3_*` env
+  vars. **If an upload collection ever comes back, the adapter is mandatory** — Payload on
+  Vercel is serverless with **no local disk**, so a missing adapter silently writes to
+  ephemeral storage and the files vanish. Use the Postgres adapter (Supabase) +
   an **S3/Supabase Storage adapter** for uploads. If the CMS gets heavy, host Payload on a
   Node platform (Railway/Fly) and keep the marketing site on Vercel.
 - **Secrets never committed.** Env in Vercel/Supabase stores; `.env.example` documents keys.
@@ -168,6 +197,13 @@ system, below).
   now pushes schema against the live production DB**, there's no separate dev database yet.
   First Payload admin user was created via the browser at `/admin`. Revisit whether
   dev/preview need their own DB before this matters (e.g. before seeding test data at volume).
+  **Corollary — `pnpm dev` can DROP production tables.** `@payloadcms/db-postgres` runs in
+  push mode in dev but not in prod, so after *removing* a collection the next local `pnpm dev`
+  is what actually drops its table **in the live DB** (prod just leaves the table orphaned
+  until then). That's how the `beats` / `kits` / `channels` / `media` / `site_settings` tables
+  go away after the 2026-08-03 trim — safe only because all five were verified empty first.
+  **Always check `totalDocs` on live before deleting a collection, and treat the first
+  post-change `pnpm dev` as a deliberate, watched migration.**
 - **Payload prod-DB connection GOTCHAS (fixed 2026-07-13, PRs #3–#5) — production `/admin` +
   `/api/*` had 500'd since first deploy; three chained causes, all in `src/payload.config.ts`:**
   1. **`PAYLOAD_SECRET` was never set on Vercel Production** (only local `.env`) → Payload
