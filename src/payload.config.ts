@@ -3,32 +3,14 @@ import { fileURLToPath } from "url";
 
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import { s3Storage } from "@payloadcms/storage-s3";
 import { buildConfig, type SharpDependency } from "payload";
 import sharp from "sharp";
 
-import { Beats } from "./collections/Beats";
-import { Channels } from "./collections/Channels";
 import { InviteRequests } from "./collections/InviteRequests";
-import { Kits } from "./collections/Kits";
-import { Media } from "./collections/Media";
 import { Users } from "./collections/Users";
-import { SiteSettings } from "./globals/SiteSettings";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
-
-/**
- * Supabase Storage is S3-compatible. Only enable the storage adapter when the
- * bucket credentials are present, so local dev / preview builds without them
- * fall back to disk instead of throwing. On Vercel (no local disk) these env
- * vars MUST be set — see .env.example.
- */
-const hasS3 =
-  !!process.env.S3_BUCKET &&
-  !!process.env.S3_ACCESS_KEY_ID &&
-  !!process.env.S3_SECRET_ACCESS_KEY &&
-  !!process.env.S3_ENDPOINT;
 
 /**
  * Postgres connection string. Local dev sets DATABASE_URL by hand; on Vercel the
@@ -65,8 +47,12 @@ export default buildConfig({
       titleSuffix: "· Luka Rajhl",
     },
   },
-  collections: [Beats, Kits, Channels, Media, Users, InviteRequests],
-  globals: [SiteSettings],
+  // Only these two are load-bearing. Beats/Kits/Channels/Media collections and a
+  // SiteSettings global used to live here, mirroring src/data/content.ts, but
+  // nothing ever read them — the public site renders from src/data/content.ts and
+  // src/data/beatstars-catalogue.json. They were removed rather than left as empty
+  // publicly-readable endpoints.
+  collections: [Users, InviteRequests],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
@@ -85,23 +71,7 @@ export default buildConfig({
   // Payload's single-signature SharpDependency type (declaration-only friction;
   // the value is a valid sharp instance at runtime).
   sharp: sharp as unknown as SharpDependency,
-  plugins: hasS3
-    ? [
-        s3Storage({
-          collections: {
-            media: true,
-          },
-          bucket: process.env.S3_BUCKET as string,
-          config: {
-            endpoint: process.env.S3_ENDPOINT,
-            region: process.env.S3_REGION || "us-east-1",
-            forcePathStyle: true, // required for Supabase Storage
-            credentials: {
-              accessKeyId: process.env.S3_ACCESS_KEY_ID as string,
-              secretAccessKey: process.env.S3_SECRET_ACCESS_KEY as string,
-            },
-          },
-        }),
-      ]
-    : [],
+  // No plugins: the @payloadcms/storage-s3 adapter was only ever attached to the
+  // `media` collection. With no upload collections left there is nothing to store,
+  // so the S3/Supabase Storage wiring (and its four S3_* env vars) is gone too.
 });
