@@ -6,12 +6,18 @@ name: Refresh BeatStars catalogue
 # locally — the live site still never calls BeatStars itself.
 #
 # NOTE: scheduled workflows only fire from the DEFAULT branch's copy of this file.
-# It checks out + pushes to `main` (the Vercel production branch), so each refresh
-# redeploys production. If the production branch changes, update `BRANCH` to match.
+#
+# BRANCH is the Vercel production branch, so every merge here redeploys prod. It is
+# a PROTECTED branch ("changes must be made through a pull request"), which is why
+# this job does NOT `git push` to it directly — that fails with
+# `GH006: Protected branch update failed`. Instead it pushes the commit to a
+# disposable carrier branch, opens a PR, and squash-merges it with GITHUB_TOKEN.
+# Merging a PR satisfies the protection rule (0 required approvals, no required
+# status checks) with no PAT and no bypass allowance to maintain.
 
 on:
   schedule:
-    - cron: "0 */6 * * *" # every 6 hours
+    - cron: "0 6,18 * * *" # twice daily; play-count ranking barely moves faster than that
   workflow_dispatch: {}
 
 concurrency:
@@ -20,33 +26,52 @@ concurrency:
 
 env:
   BRANCH: main
+  PR_BRANCH: chore/catalogue-refresh
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.BRANCH }}
           fetch-depth: 1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22 # LTS; the script uses only Node builtins + global fetch
 
       - name: Fetch latest catalogue
         run: node scripts/fetch-beatstars.mjs
 
-      - name: Commit if the catalogue changed
+      - name: Merge a refresh PR if the catalogue changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git diff --quiet -- src/data/beatstars-catalogue.json; then
             echo "No catalogue changes."
             exit 0
           fi
+
           git config user.name "catalogue-bot"
           git config user.email "actions@github.com"
           git add src/data/beatstars-catalogue.json
           git commit -m "chore(data): refresh BeatStars catalogue (auto)"
-          git push origin HEAD:${{ env.BRANCH }}
+
+          # Force-push: PR_BRANCH only ever carries this one commit, and a run that
+          # failed after pushing may have left a stale one behind.
+          git push --force origin "HEAD:refs/heads/$PR_BRANCH"
+
+          # Reuse an open PR if a previous run left one unmerged, else open one.
+          pr=$(gh pr list --head "$PR_BRANCH" --base "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -z "$pr" ]; then
+            gh pr create --head "$PR_BRANCH" --base "$BRANCH" \
+              --title "chore(data): refresh BeatStars catalogue (auto)" \
+              --body "Automated refresh from \`scripts/fetch-beatstars.mjs\` — re-ranks the top 10 beats/kits by BeatStars play count."
+            pr=$(gh pr list --head "$PR_BRANCH" --base "$BRANCH" --state open --json number --jq '.[0].number')
+          fi
+
+          gh pr merge "$pr" --squash --delete-branch
