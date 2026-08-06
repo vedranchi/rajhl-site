@@ -67,10 +67,6 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    beats: Beat;
-    kits: Kit;
-    channels: Channel;
-    media: Media;
     users: User;
     'invite-requests': InviteRequest;
     'payload-kv': PayloadKv;
@@ -80,10 +76,6 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    beats: BeatsSelect<false> | BeatsSelect<true>;
-    kits: KitsSelect<false> | KitsSelect<true>;
-    channels: ChannelsSelect<false> | ChannelsSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'invite-requests': InviteRequestsSelect<false> | InviteRequestsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -95,12 +87,8 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {
-    'site-settings': SiteSetting;
-  };
-  globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-  };
+  globals: {};
+  globalsSelect: {};
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -128,96 +116,6 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "beats".
- */
-export interface Beat {
-  id: number;
-  title: string;
-  bpm: number;
-  key: string;
-  duration?: string | null;
-  /**
-   * Deep-link to this beat on BeatStars (checkout happens there).
-   */
-  buyUrl: string;
-  cover?: (number | null) | Media;
-  /**
-   * Optional short MP3 preview. The full track is sold on BeatStars.
-   */
-  preview?: (number | null) | Media;
-  featured?: boolean | null;
-  published?: boolean | null;
-  /**
-   * Lower numbers appear first.
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "kits".
- */
-export interface Kit {
-  id: number;
-  name: string;
-  /**
-   * Short spec line shown under the kit name.
-   */
-  meta: string;
-  /**
-   * Display price only — charged on the store, not here.
-   */
-  price: string;
-  buyUrl: string;
-  cover?: (number | null) | Media;
-  published?: boolean | null;
-  /**
-   * Lower numbers appear first.
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "channels".
- */
-export interface Channel {
-  id: number;
-  name: string;
-  icon: 'youtube' | 'instagram' | 'telegram' | 'beatstars';
-  sub?: string | null;
-  handle?: string | null;
-  url: string;
-  /**
-   * Lower numbers appear first.
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -297,22 +195,6 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'beats';
-        value: number | Beat;
-      } | null)
-    | ({
-        relationTo: 'kits';
-        value: number | Kit;
-      } | null)
-    | ({
-        relationTo: 'channels';
-        value: number | Channel;
-      } | null)
-    | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
-    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -361,71 +243,6 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "beats_select".
- */
-export interface BeatsSelect<T extends boolean = true> {
-  title?: T;
-  bpm?: T;
-  key?: T;
-  duration?: T;
-  buyUrl?: T;
-  cover?: T;
-  preview?: T;
-  featured?: T;
-  published?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "kits_select".
- */
-export interface KitsSelect<T extends boolean = true> {
-  name?: T;
-  meta?: T;
-  price?: T;
-  buyUrl?: T;
-  cover?: T;
-  published?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "channels_select".
- */
-export interface ChannelsSelect<T extends boolean = true> {
-  name?: T;
-  icon?: T;
-  sub?: T;
-  handle?: T;
-  url?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -507,74 +324,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  status?: string | null;
-  bio?: string | null;
-  /**
-   * The Artist / Location / Genre / … rows in the About tab.
-   */
-  specs?:
-    | {
-        k: string;
-        v: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Scrolling headlines at the top of the window.
-   */
-  marquee?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  nowPlaying?: {
-    title?: string | null;
-    artist?: string | null;
-    elapsed?: string | null;
-    total?: string | null;
-  };
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
- */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  status?: T;
-  bio?: T;
-  specs?:
-    | T
-    | {
-        k?: T;
-        v?: T;
-        id?: T;
-      };
-  marquee?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  nowPlaying?:
-    | T
-    | {
-        title?: T;
-        artist?: T;
-        elapsed?: T;
-        total?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
