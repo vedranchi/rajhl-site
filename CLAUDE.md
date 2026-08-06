@@ -1,272 +1,237 @@
-# CLAUDE.md — working rules for this repo
+# CLAUDE.md — operating rules for this repo
 
-> **Auto-loaded each session.** This is the living rules/restrictions file — **append new
-> rules, patterns, and gotchas as they emerge.** For current status & next steps see the
-> latest file in `docs/handoffs/` (gitignored, local-only — no `HANDOFF.md` at repo root).
-> Full plan: `~/.claude/plans/i-am-building-a-tender-rivest.md`.
+## 0. Using this file
+- **Scope:** standing rules and pointers. This file is **not a status report** — it records
+  what is always true, never what is currently deployed.
+- **Precedence, highest first:**
+  1. **Live system state** — the code, `git`/`gh`, the database. If this file disagrees with
+     the system, the system wins and this file is wrong: fix it in the same session.
+  2. **An explicit instruction from the user in this session** — except §1 DANGER, which
+     always needs confirmation first.
+  3. **This file.**
+  4. `docs/`, vault notes, commit messages, past handoffs.
+- Two rules conflict → the more specific one wins. Equally specific → ask.
+- Rule IDs (`G3`, `DB2`) are stable. Cite them in commits/PRs and when superseding a rule.
+- **Maintenance:** write rules as invariants, present tense, no dates in the body. Retire a
+  rule when its subject is gone. Long debugging narratives belong in §16, not here. Soft
+  budget ~240 lines — over it means something belongs elsewhere.
 
-## What this is
-Website for **Luka Rajhl** (beat producer, Skopje) — the user's first client — built as the
-first instance of a **reusable client-site template**. Public site first; analytics/AI admin
-dashboard is Phase 2. The reusable *process* lives in the Obsidian vault (see Knowledge
-system, below).
+## 1. DANGER — confirm with the user before each of these
+- **D1** `pnpm dev` runs Payload's schema push against the **live production database**
+  (local `.env` `DATABASE_URL` is the prod pooler; there is no dev DB). After a collection or
+  field change, the first `pnpm dev` **drops the removed tables/columns in production**.
+- **D2** Submitting the invite form — locally or deployed — writes a real row and sends a
+  real email to the client via Resend. There is no sandbox.
+- **D3** `vercel env pull --environment=production` is a live secrets pull.
+- **D4** Deleting a collection or field requires a `totalDocs` check against live first.
+- **D5** Rotating `PAYLOAD_SECRET` invalidates existing admin sessions.
+- **D6** Client-owned accounts (domain, hosting, analytics, socials): delegated access only.
+  Never park the client's business on personal accounts.
 
-## Stack & conventions
-- **Next.js 16 (App Router) + TypeScript**, **Tailwind + shadcn/ui**, **Payload 3** (CMS,
-  embedded, `/admin`), **Supabase** (Postgres + Storage), **Vercel**. Package manager
-  **pnpm**.
-- ESLint (no Prettier configured), conventional commits, Vitest unit tests (no Playwright/e2e
-  set up yet — aspirational, not present), typed env, `.env.example`.
-- `src/` dir; import alias `@/*`.
+## 2. What this is
+Website for **Luka Rajhl** (beat producer, Skopje) — the user's first client, built as the
+first instance of a reusable client-site template. Public marketing site now; analytics/AI
+admin dashboard is Phase 2. The reusable *process* lives in the Obsidian vault (§13).
 
-## Hard rules / restrictions (learned)
+## 3. Stack — ground truth is `package.json`
+Next.js 16 App Router · React 19 · TypeScript · Tailwind v4 (CSS-first `@theme`, no
+`tailwind.config.js`) · Payload 3 embedded at `/admin` · Postgres via Supabase · Vercel ·
+pnpm · ESLint (no Prettier) · Vitest (no e2e). `src/`, alias `@/*`. Layout: `app/` ·
+`app/(payload)/` · `app/actions/` · `collections/` · `components/retro/` · `data/` · `lib/`.
 
-### Knowledge system (Obsidian vault)
-- Vault knowledge is **Markdown, script-managed**. **NEVER hand-edit** note frontmatter
-  (`updated`, `tags`, `related`) or `Index.md` — use the scripts: `create_note.py`,
-  `update_note.py`, `update_index.py`, `backlink_notes.py`, `archive_note.py`. Run them with
-  `~/Dev/knowledge-system/.venv/bin/python`.
-- **Search before writing** (`search_notes.py`); **ask before creating/registering/
-  scaffolding**. Propose an update to an existing note rather than duplicating.
-- Filling a note's body **is** done with the Edit tool (that's expected); only the
-  frontmatter/index bookkeeping must go through scripts.
-- Don't touch the vault's `Main/` or `tags/` folders — this system owns `Projects/` only.
-- This repo ↔ vault project **"Luka Rajhl"**; the reusable playbook ↔ **"Client Delivery"**.
+- **S1** The public site renders from `src/data/content.ts` +
+  `src/data/beatstars-catalogue.json` and **never reads Payload**. The only Payload call
+  outside `app/(payload)/` is the invite server action, via the Local API (`src/lib/payload.ts`).
+- **S2** Generated — never hand-edit, regenerate: `src/payload-types.ts`
+  (`pnpm generate:types`) and `src/app/(payload)/admin/importMap.js` (`pnpm generate:importmap`).
+- **S3** shadcn/ui is **not installed** and there is no `components/ui/`. Don't import from
+  it. Adding it is a decision to raise, not a detail to slip in.
 
-### Product / domain
-- **Do NOT rebuild commerce/licensing.** BeatStars owns checkout, leases (MP3/WAV/exclusive),
-  contracts, and payouts. We only **embed / deep-link**.
-- **BeatStars has NO *documented* public API.** Sales/analytics data = **CSV import / manual
-  only**. **Never scrape at runtime** (ToS + fragility) — the live site must make zero calls
-  to BeatStars.
-- **Catalogue deep-links + popularity (done 2026-07-10):** there IS an undocumented but
-  public, unauthenticated read path — their **Algolia search index** (app `NMMGZJQ6QI`, index
-  `public_prod_inventory_track_index` / `…_soundkit_index`, filter `memberId:MR1947497`,
-  `Referer: https://www.beatstars.com/` required, **caps at 100 hits/page → paginate**) plus
-  the **v2 read API** (`https://main.v2.beatstars.com/track?id=` / `…/soundkit?id=`) for
-  canonical URLs. Each Algolia hit carries `activities.{play,sale,like}` — **popularity =
-  `activities.play`**. `scripts/fetch-beatstars.mjs` pages through all items, ranks by plays,
-  and bakes the **top 10** beats + up to 10 kits into `src/data/beatstars-catalogue.json`
-  (real `/beat/<slug>` + `/sound-kits/<slug>` links, duration, price, play count). Re-run to
-  refresh; commit the JSON. **Never** call these endpoints from the app at request time.
-  Gotchas: the `bsta.rs/k/<id>/` kit short-link redirects to a *private* pro-page — use the
-  v2 `relative_uri` (`/sound-kits/<slug>`) instead; Algolia rejects requests without the
-  Referer header.
-- **Auto-refresh:** `.github/workflows/refresh-catalogue.yml` runs the fetch script **twice
-  daily** (`0 6,18 * * *`, + manual dispatch) and, if the JSON changed, lands it on `main` →
-  Vercel redeploys. This is how the top-10 re-ranks automatically as plays change / new kits
-  appear. **Scheduled workflows only fire from the DEFAULT branch's copy of the file.** The
-  UI shows only the top 10; a **"Browse all N on BeatStars" CTA** (`.browseall`) links out
-  for the rest — this is the "clean hand-off."
-- **`main` is a PROTECTED branch — the refresh job must NOT `git push` to it (fixed
-  2026-08-03).** From 2026-08-01 (when PR #6 flipped `BRANCH` from `test-prod` to `main`)
-  until this fix, **every scheduled run failed** with
-  `remote: error: GH006: Protected branch update failed … Changes must be made through a
-  pull request`, silently freezing production on the 2026-07-11 catalogue snapshot (228
-  beats vs 235 actual) for three days. Nothing surfaces this but the Actions tab — **if the
-  live "Browse all N beats" number looks stale, check `gh run list` first.** Fix: the job
-  force-pushes its one commit to a disposable `chore/catalogue-refresh` branch, opens a PR,
-  and `gh pr merge --squash --delete-branch`es it with `GITHUB_TOKEN`. Merging a PR
-  satisfies the protection rule (`required_approving_review_count: 0`, no required status
-  checks, `require_last_push_approval: false`) with **no PAT and no bypass allowance to
-  maintain** — needs `permissions: contents: write` **+ `pull-requests: write`**. If a
-  future protection change blocks the merge too, add a bypass allowance for the repo admin
-  in GitHub settings rather than reintroducing a direct push.
-- **Browser audio = the most-popular beat.** The stable redirect endpoint
-  `https://main.v2.beatstars.com/stream?id=<numericId>&return=audio` 302s to a fresh signed
-  S3 mp3 each request (so it never expires). The transport plays it as **plain opaque
-  cross-origin media — do NOT set `crossOrigin`** (the S3 leg has no CORS headers; requiring
-  CORS would break playback). This one client-side call to BeatStars is embed-like (a preview,
-  like the Spotify iframe), the sole exception to "the site never calls BeatStars." The
-  synthesized loop is the **fallback** if the stream errors.
-- **Instagram Graph API** needs a **Business/Creator account + linked Facebook Page + Meta app
-  review**. Treat as conditional; manual fallback. (Instagram Basic Display was deprecated.)
-- **YouTube:** public stats via Data API v3 (API key); private metrics (watch time, revenue)
-  need channel-owner **OAuth**.
-- **Telegram:** rich channel analytics aren't available via API — treat as a link.
+## 4. Definition of done
+- **DoD1** `pnpm lint && pnpm test && pnpm build` all pass. Report failures verbatim. Never
+  weaken, skip, or delete a test to get green.
+- **DoD2** Any collection or field change → run **both** `pnpm generate:types` and
+  `pnpm generate:importmap`, and commit the output.
+- **DoD3** "Fixed" means **merged to `main` and observed working in the deployed system**.
+  Committed-on-a-branch is not fixed. A CI change is not fixed until a run passes **from
+  `main`** (see G7).
+- **DoD4** State plainly what was verified and what was not.
 
-### Design
-- **Palette is fixed:** dark charcoal + muted violet. **Do not** drift to light themes.
-- **Chosen concept (client-approved): Retro 2016 media-player.** A desktop-window UI —
-  beveled 3D chrome, violet gradient title bar, notched folder **tabs**
-  (Beats / Kits / Channels / About), Winamp-style transport bar, marquee ticker, CRT
-  scanlines, a faint vaporwave grid, **monospace** type. A **design-only invite form**
-  (username + email → private Telegram group) sits in a second window. Reference artifacts:
-  retro `8e0fc421-7392-46e8-adbe-de4eaf824fee`; elegant thin-serif alternate (shelved, not
-  deleted) `a19ea157-c06f-4c43-a62b-3d2136cfe6c6`. Source mockups in `scratchpad/`.
-- Tokens: bg `#0B0B0D` · surface `#141317` · elevated `#1C1B21` · text `#EDECEF` / muted
-  `#9A98A3` · accent `#8B7CC8` · deep `#5B4B8A` · glow `#A594E0` · hairline
-  `rgba(255,255,255,.08)`. Retro extras: bevel-light `rgba(255,255,255,.13)`, bevel-dark
-  `rgba(0,0,0,.62)`, line `#050506`, well `#101014`.
-- **Retro accent pass (2026-07-10, user-approved):** phosphor-amber `#E6B45A` for LED-style
-  readouts (marquee, visitor counter, transport time), vaporwave magenta `#A66FB5` as the
-  titlebar-gradient tail + a faint bottom "horizon" glow, LED green tokenized as `--led`
-  `#7FE0A4`. Amber/magenta are *readout/tint* colors only — violet stays the primary accent;
-  still no light themes.
-- **Spotify:** playlist embedded via the official iframe
-  (`open.spotify.com/embed/playlist/<id>`) in its own **`SpotifyWindow`** that sits **beside
-  the invite form** in a `.bottomrow` flex row (client asked for it next to the form, not a
-  tab) — no API key needed, works with Spotify's CSP. Don't proxy or scrape Spotify.
-- **Transport player is real:** `src/components/retro/Player.tsx` (client) drives an
-  `<audio>` element with live seek/elapsed, and plays a short synthesized **Web Audio**
-  "retro blip" on every control press (square-wave chiptune, no asset). Source = the
-  most-popular BeatStars beat (streamed, see above); the 15s synthesized loop at
-  `public/audio/placeholder-loop.wav` is the fallback. The **File/Play menu** can drive it
-  via the `lr:toggle-play` window CustomEvent.
-- **Menu bar is interactive** (`src/components/retro/MenuBar.tsx`, client): File (open
-  store/Spotify), Edit (copy links → toast), View (toggle CRT scanlines / vaporwave grid via
-  `body.no-scanlines` / `body.no-grid` classes), Play (drive transport), Help (retro About
-  modal). The scanlines/grid are togglable because the grid moved to `body::before` and
-  scanlines stay on `body::after`. Hidden on mobile.
-- **Beats table:** no BPM/Key columns (client asked to drop them); shows rank · title ·
-  **play count** · time · license, top-10 only.
-- **React 19 lint is strict:** `react-hooks/refs` forbids reading a `ref.current` in any
-  function reachable from render (even handlers) — use effects/state instead;
-  `react-hooks/purity` forbids `Date.now()`/`new Date()` in render — hoist to module scope.
+## 5. Terminology — use these exactly
+- **Production / deployed** = the live Vercel deployment of `main`.
+- **prod build** = a local `pnpm build && pnpm start`.
+- **prod DB** = the Supabase database — reached by *both* of the above **and** by `pnpm dev`.
 
-### Build / ops
-- **Payload's surface is deliberately small: `Users` + `InviteRequests`, nothing else
-  (trimmed 2026-08-03).** `Beats`, `Kits`, `Channels`, `Media` and a `SiteSettings` global
-  were fully modeled and registered but **nothing ever read them** — there is not one
-  `payload.find` / `payload.findGlobal` call in the app; the public site renders from
-  `src/data/content.ts` + `src/data/beatstars-catalogue.json`, and BeatStars (not the CMS) is
-  the source of truth for beats/kits. They were also `read: () => true`, i.e. publicly
-  readable empty endpoints. All five were verified empty against live prod (`totalDocs: 0`)
-  and deleted. **Don't re-add a CMS mirror of `content.ts` without wiring the site to read
-  it.** After any collection change run **both** `pnpm generate:types` and
-  `pnpm generate:importmap`.
-- **No uploads → no storage adapter.** `@payloadcms/storage-s3` was removed with `Media` (it
-  was only ever attached to `collections: { media: true }`), along with the four `S3_*` env
-  vars. **If an upload collection ever comes back, the adapter is mandatory** — Payload on
-  Vercel is serverless with **no local disk**, so a missing adapter silently writes to
-  ephemeral storage and the files vanish. Use the Postgres adapter (Supabase) +
-  an **S3/Supabase Storage adapter** for uploads. If the CMS gets heavy, host Payload on a
-  Node platform (Railway/Fly) and keep the marketing site on Vercel.
-- **Secrets never committed.** Env in Vercel/Supabase stores; `.env.example` documents keys.
-- **Client owns the accounts** (domain, hosting, analytics, social/API). We take delegated
-  access only — never park the client's business on personal accounts.
-- **Git:** don't commit or push unless asked. Branch off `main` first. Commit footer:
-  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
-- **create-next-app note:** `CLAUDE.md` + `HANDOFF.md` already live at repo root. When
-  scaffolding, run `create-next-app .` in place; if it refuses because the dir isn't empty,
-  scaffold in a temp dir and merge back, **preserving these two files**.
-- **pnpm build gotcha (Next 16 + pnpm 11):** pnpm's `verify-deps-before-run` runs an install
-  before `pnpm build`; it exits 1 while the `sharp` / `unrs-resolver` build scripts are
-  unapproved. Fix (done): set `allowBuilds: { sharp: true, unrs-resolver: true }` in
-  `pnpm-workspace.yaml`, then run `pnpm install` once so the scripts execute.
-- **`pnpm generate:types` / `pnpm generate:importmap` FIXED (2026-07-12).** Root cause
-  (confirmed against upstream `payloadcms/payload#15701` and `#15875`): the Payload CLI's bin
-  scripts load `payload.config.ts` via `tsx`'s CJS `require()` hook; without
-  `"type": "module"` in `package.json`, that hook falls through to `require()` for ESM
-  dependencies in the graph (`@payloadcms/richtext-lexical`, top-level await), which Node's
-  synchronous `require(esm)` interop explicitly refuses (`ERR_REQUIRE_ASYNC_MODULE` — by
-  design, not a bug, and **not Node-v25-specific** — it applies on any Node ≥22.12). **Fix:**
-  added `"type": "module"` to `package.json`; the CLI now uses `import()` instead. Both
-  `pnpm generate:types` (writes `src/payload-types.ts`) and `pnpm generate:importmap` (fixed
-  the `PayloadComponent not found: @payloadcms/next/rsc#CollectionCards` admin warning) now
-  succeed and are regenerated/committed. Re-run either after changing collections. Dead end
-  for reference: `NODE_OPTIONS=--no-experimental-require-module` does **not** fix this — it
-  just trades `ERR_REQUIRE_ASYNC_MODULE` for an earlier `ERR_REQUIRE_ESM` on
-  `@payloadcms/db-postgres`'s own ESM build. Don't retry that route.
-- **Remaining Node v25 / Turbopack-dev-only symptom (still open, 2026-07-12):**
-  `/api/graphql` **500s under `pnpm dev`** — Turbopack's own external `require()` of ESM
-  `graphql@17` hits the same kind of `require(esm)` race (`ERR_INTERNAL_ASSERTION: … not yet
-  fully loaded`), a **different code path** than the CLI fix above (this is Turbopack's dev
-  bundler, not `tsx`), so `"type": "module"` does not resolve it. **Production is
-  unaffected** — reverified 2026-07-12 via `pnpm build` + `pnpm start`:
-  `POST /api/graphql` returns real data (`{"data":{"__typename":"Query"}}`). Test GraphQL
-  against a prod server, don't chase the dev 500.
-- **Invite-requests access control VERIFIED (2026-07-11 local prod build; re-verified against
-  DEPLOYED Production 2026-07-13):** anonymous `GET`/`POST /api/invite-requests` → 403
-  (`"You are not allowed to perform this action."`), `PATCH`/`DELETE` → 400 (missing-id, no
-  unauthorized write); GraphQL `createInviteRequest` → 403-in-envelope. `/admin` and `/` both
-  200. The `create: () => false` keystone works; server-action writes go through the Local API
-  (`overrideAccess` default). See §12/§14 of
-  `docs/plans/private-group-invite-payload-plan.md`. **Not yet exercised end-to-end on the
-  deployed site:** live form submit → row + Resend email, dedupe, and rate-limit — these run
-  through a React-dispatched server action (no plain REST/curl path) and need a real browser
-  submission or an authorized prod-DB read to confirm.
-- **Supabase project is live and wired to Vercel (done 2026-07-11):** project ref
-  `dgaiclbbmmqylvtajetc`, connected via the Vercel↔Supabase marketplace integration under
-  Vercel project `vedran-chichov/rajhl-site`. This auto-injected `POSTGRES_*` / `SUPABASE_*`
-  env vars into Vercel scoped to **Production only** (not Preview/Development) — pull them
-  with `vercel env pull .env.local --environment=production` if a fresh machine needs them
-  (this is a real secrets pull; don't run it without the user asking). Local `.env`
-  `DATABASE_URL` is hand-set to the **pooler** URI (`aws-0-eu-central-1.pooler.supabase.com:6543`,
-  username `postgres.dgaiclbbmmqylvtajetc`) — the same one used in prod, so **local `pnpm dev`
-  now pushes schema against the live production DB**, there's no separate dev database yet.
-  First Payload admin user was created via the browser at `/admin`. Revisit whether
-  dev/preview need their own DB before this matters (e.g. before seeding test data at volume).
-  **Corollary — `pnpm dev` can DROP production tables.** `@payloadcms/db-postgres` runs in
-  push mode in dev but not in prod, so after *removing* a collection the next local `pnpm dev`
-  is what actually drops its table **in the live DB** (prod just leaves the table orphaned
-  until then). That's how the `beats` / `kits` / `channels` / `media` / `site_settings` tables
-  go away after the 2026-08-03 trim — safe only because all five were verified empty first.
-  **Always check `totalDocs` on live before deleting a collection, and treat the first
-  post-change `pnpm dev` as a deliberate, watched migration.**
-- **Payload prod-DB connection GOTCHAS (fixed 2026-07-13, PRs #3–#5) — production `/admin` +
-  `/api/*` had 500'd since first deploy; three chained causes, all in `src/payload.config.ts`:**
-  1. **`PAYLOAD_SECRET` was never set on Vercel Production** (only local `.env`) → Payload
-     `init` threw `missing secret key`. Added it to Vercel Prod, **reusing the exact local
-     value** so it matches the secret that signed the existing admin user's JWT. `secret:`
-     still reads `process.env.PAYLOAD_SECRET || ""` — the `|| ""` masks a missing secret as a
-     deep runtime error instead of a loud boot failure; harden later.
-  2. **The config read `process.env.DATABASE_URL`, which does NOT exist on Vercel.** The
-     Supabase↔Vercel integration injects **`POSTGRES_URL`** (+ `POSTGRES_URL_NON_POOLING`,
-     etc.), never `DATABASE_URL` — that name only exists because local `.env` sets it by hand.
-     Fix: `connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL || ""` (local
-     still wins locally; prod falls through to the integration-managed var → survives credential
-     rotation, no duplicate pinned secret).
-  3. **Supabase's cert is self-signed AND `POSTGRES_URL` carries `sslmode=require`.** Recent
-     node-postgres coerces `require`→`verify-full`, so it rejects the chain
-     (`self-signed certificate in certificate chain`). **Setting `ssl: { rejectUnauthorized:
-     false }` alone did NOT fix it** — the `sslmode` string param **overrides** the explicit
-     `ssl` option. Fix: a `pgConnectionString()` helper that **strips `sslmode`/`ssl` from the
-     URL** so the explicit `ssl` option applies (TLS stays on; only the chain check is skipped).
-     Verified against the live DB: `require`-only and `require`+`ssl`-object both fail;
-     stripped+`ssl`-object connects (`select 1` → ok). Local `DATABASE_URL` (pooler, no
-     `sslmode`) never hit this. Hardened alternative if full verification is wanted later:
-     bundle Supabase's CA and pass `ssl: { ca }`.
+## 6. Session start & recovery
+- **R1** Before any claim about what is deployed or what CI is doing: `git fetch`, compare
+  `HEAD` to `origin/main` (local `main` goes stale), then `gh run list`. This file records
+  intent; only the system records state.
+- **R2** Resuming interrupted work, in order: `git fetch` → `git status` →
+  `git log origin/main..HEAD` → newest file in `docs/handoffs/` → `gh run list`.
+- **R3** `docs/` is **gitignored**, so `docs/handoffs/` and `docs/plans/` exist only on this
+  machine. Never cite them as if a fresh clone, another contributor, or a cloud agent could
+  read them.
 
-### Artifacts / design previews
-- Artifact CSP **blocks external fonts/images/scripts** — inline everything (data URIs). For
-  local macOS previews of the "elegant thin serif," system **Didot / Bodoni 72 / Hoefler
-  Text** render well. Load the **artifact-design** skill before building an Artifact; the
-  **dataviz** skill before any chart.
+## 7. Git, CI, deploy, rollback
+- **G1** Don't commit or push unless asked. Branch off `main` first.
+- **G2** `main` is the default branch and is **protected** — no direct pushes; changes land
+  by PR (0 required approvals, no required status checks).
+- **G3** Merging to `main` deploys production.
+- **G4** Rollback: Vercel instant rollback for a site regression, a revert PR for the repo.
+  Never force-push `main`.
+- **G5** Conventional commits. Footer:
+  `Co-Authored-By: Claude <model> <noreply@anthropic.com>`, using the model name the current
+  session provides. Do not hardcode a model version in this file.
+- **G6** Merge conflicts by file class: **generated files (S2)** → regenerate, never
+  hand-merge. **`src/data/beatstars-catalogue.json`** → re-run the fetch script, never
+  hand-merge. **This file** → keep both rules, then de-duplicate deliberately.
+- **G7** `.github/workflows/refresh-catalogue.yml` refreshes the catalogue twice daily and
+  lands it on `main`. **Scheduled workflows only ever run the default branch's copy** —
+  editing the workflow on a branch changes nothing until it merges. Because `main` is
+  protected the job must **not** `git push` to it (that fails `GH006`); it force-pushes one
+  commit to a disposable carrier branch, opens a PR, and squash-merges it with
+  `GITHUB_TOKEN` (needs `contents: write` **+** `pull-requests: write`). The force-push is
+  deliberate and safe — the carrier branch only ever holds that one commit. If a future
+  protection change blocks the merge too, add a repo-admin bypass allowance rather than
+  restoring a direct push.
+- **G8** Symptom → first check: the live "Browse all N beats" number looks stale →
+  `gh run list` before anything else. Nothing else surfaces a failed refresh.
 
-## Build order (phasing)
-1. **Marketing/retro site first** — Next.js 15 + Tailwind, no CMS/DB. Port the retro mockup
-   into React components; polish later (client said "polish will come later").
-2. **Add Payload 3 + Supabase later** — additive, once the client provides a Supabase project
-   (`DATABASE_URL` + keys). Don't block the site build on it.
-3. **Invite form is design-only for now.** Later: a Next.js **server action** emails
-   submissions to the client (Resend/Postmark — client flagged "sent to the client's email")
-   and optionally returns the private Telegram invite link + stores the lead in Supabase.
-4. **Fonts:** retro currently uses **system monospace**. Consider a retro face via `next/font`
-   (e.g. IBM Plex Mono / VT323 / Press Start 2P) as polish — never a CDN `<link>`.
+## 8. Database & CMS
+- **DB1** Payload's surface is deliberately `Users` + `InviteRequests`. Don't add a CMS
+  mirror of `content.ts` without also wiring the site to read it — BeatStars, not the CMS, is
+  the source of truth for beats and kits.
+- **DB2** No upload collections → no storage adapter. If an upload collection ever returns,
+  an S3/Supabase Storage adapter is **mandatory**: Vercel is serverless with no disk, and a
+  missing adapter silently writes to ephemeral storage where files vanish.
+- **DB3** Migration ritual, in order: verify `totalDocs` on live (D4) → make the change →
+  run `pnpm dev` **once, watched, as a deliberate migration** (D1) → `pnpm generate:types` +
+  `pnpm generate:importmap` → commit.
+- **DB4** Connection resolves `DATABASE_URL` → `POSTGRES_URL`. The Supabase↔Vercel
+  integration injects `POSTGRES_URL`; `DATABASE_URL` exists only in local `.env`. `sslmode`
+  must be stripped from the URL or it overrides the explicit `ssl` option and Supabase's
+  self-signed chain is rejected. See `pgConnectionString()` in `src/payload.config.ts` —
+  don't "simplify" it.
+- **DB5** Invite-request rows are personal data (name + email). Never paste them into
+  transcripts, commits, issues, or PRs.
+- **DB6** `/api/graphql` 500s under `pnpm dev` (Turbopack's `require(esm)` of graphql 17).
+  Production is unaffected — test GraphQL against a prod build; don't chase the dev 500.
 
-## Environment
-- node **v25.6.1**, npm **11.9.0**, **pnpm 11.11.0** (installed via `npm i -g pnpm`; corepack
-  absent), git **2.50.1**, Docker **29.2.1**. **psql** not installed → use Docker Postgres
-  locally or Supabase.
-- Scaffolded on **Next.js 16 + React 19 + Tailwind v4** (CSS-first `@theme`, no
-  `tailwind.config.js`). Retro theme lives in `src/app/globals.css`; components in
-  `src/components/retro/`; placeholder data in `src/data/content.ts`.
-- Repo: `/Users/vchichovv/Dev/clients/rajhl/personal-website` (greenfield; not yet git-init'd).
+## 9. Product & domain
+- **P1** Don't rebuild commerce or licensing. BeatStars owns checkout, leases, contracts,
+  and payouts. Embed or deep-link only.
+- **P2** The site makes exactly **one** runtime call to BeatStars: the audio stream
+  `https://main.v2.beatstars.com/stream?id=<numericId>&return=audio` (302s to a fresh signed
+  S3 mp3, so it never expires). Play it as plain opaque cross-origin media — **do not set
+  `crossOrigin`**; the S3 leg has no CORS headers and requiring CORS breaks playback. The
+  synthesized loop at `public/audio/placeholder-loop.wav` is the fallback. **No other
+  runtime call to BeatStars, ever** — no catalogue, sales, or analytics fetch at request
+  time (ToS + fragility).
+- **P3** Catalogue data is baked ahead of time by `scripts/fetch-beatstars.mjs` and committed
+  as JSON. It reads BeatStars' undocumented-but-public Algolia index (app `NMMGZJQ6QI`,
+  indexes `public_prod_inventory_track_index` / `…_soundkit_index`, filter
+  `memberId:MR1947497`, **`Referer: https://www.beatstars.com/` required**, **100 hits/page
+  max → paginate**) plus the v2 read API (`…/track?id=`, `…/soundkit?id=`) for canonical
+  URLs. Popularity = `activities.play`. Top 10 beats + up to 10 kits are baked; a
+  "Browse all N" CTA links out for the rest. Kit short-links (`bsta.rs/k/<id>/`) redirect to
+  a **private** page — use the v2 `relative_uri` (`/sound-kits/<slug>`).
+- **P4** Those endpoints are undocumented and can change without notice. Verify before
+  relying on any detail in P3, and never present it to the user as guaranteed-current. The
+  fetch script enforces sanity gates for exactly this reason: it refuses to write an empty
+  catalogue or a >20% drop in total beats and exits non-zero instead (a red workflow run,
+  stale-but-correct JSON stays live). Override with `ALLOW_CATALOGUE_SHRINK=1` only when the
+  drop is real. It also leaves the file untouched when only `_generatedAt` would change.
+- **P5** Sales and analytics data: CSV import or manual only.
+- **P6** Integrations: **Instagram** Graph API needs a Business/Creator account + linked
+  Facebook Page + Meta app review (Basic Display is deprecated) — conditional, manual
+  fallback until approved. **YouTube** public stats via Data API v3 key; private metrics
+  (watch time, revenue) need channel-owner OAuth. **Telegram** has no useful channel
+  analytics — treat as a link. **Spotify** is the official embed iframe — don't proxy or
+  scrape it.
 
-## Process
-- Interview before big decisions; **prototype the landing page and get sign-off before the
-  full build** (per the delivery playbook).
-- After meaningful work, capture durable knowledge: rules/gotchas → here; engineering notes →
-  the vault (scripts).
+## 10. Design
+Palette authority is `src/app/globals.css` (`@theme` + CSS vars). Read tokens from there;
+never hardcode hex in components.
+- **DS1** Dark charcoal + muted violet. **No light themes, ever.**
+- **DS2** Amber and magenta are readout/tint colors only (LED-style displays, titlebar
+  gradient tail, horizon glow). Violet stays the primary accent.
+- **DS3** Approved concept: retro 2016 desktop media-player — beveled 3D chrome, violet
+  gradient title bar, notched folder tabs, Winamp-style transport, marquee ticker, CRT
+  scanlines, vaporwave grid, monospace type. Client-approved: changing the concept is a
+  client decision, not a refactor.
+- **DS4** Beats table columns: rank · title · play count · time · license. **No BPM/Key** —
+  the client asked for them removed.
+- **DS5** React 19 lint is strict: `react-hooks/refs` forbids reading `ref.current` in any
+  function reachable from render (handlers included) — use effects/state.
+  `react-hooks/purity` forbids `Date.now()` / `new Date()` in render — hoist to module scope.
+- **DS6** Fonts: system monospace today. Any retro face goes through `next/font` — never a
+  CDN `<link>`.
+
+## 11. Testing
+- **T1** Tests are colocated `*.test.ts` (`src/lib/`, `src/collections/hooks/`).
+  `pnpm test` / `pnpm test:watch`.
+- **T2** The invite path (env parsing, validation, dedupe, rate limiting) is the
+  security-relevant surface — keep it covered and extend the tests when changing it.
+- **T3** Invite access control is verified by unit tests and against a prod build. **Not yet
+  exercised end-to-end on the deployed site** (live submit → row + Resend email); doing so
+  triggers D2.
+
+## 12. Environment & secrets
+- **E1** Secrets are never committed. `.env.example` documents every key the app reads —
+  update it in the same commit that introduces a key.
+- **E2** `sharp` and `unrs-resolver` must stay in `allowBuilds` in `pnpm-workspace.yaml`, or
+  pnpm's pre-run dependency check makes `pnpm build` exit 1.
+- **E3** `package.json` has `"type": "module"` — **required**, don't remove. Without it the
+  Payload CLI loads the config through tsx's CJS `require()` hook and dies with
+  `ERR_REQUIRE_ASYNC_MODULE`. `NODE_OPTIONS=--no-experimental-require-module` does **not**
+  fix it (it trades one error for `ERR_REQUIRE_ESM`) — don't retry that route.
+
+## 13. Knowledge system (Obsidian vault)
+- **K1** This repo ↔ vault project **"Luka Rajhl"**; the reusable playbook ↔
+  **"Client Delivery"**.
+- **K2** **Never hand-edit** note frontmatter (`updated`, `tags`, `related`) or `Index.md` —
+  use the scripts (`create_note.py`, `update_note.py`, `update_index.py`,
+  `backlink_notes.py`, `archive_note.py`) via `~/Dev/knowledge-system/.venv/bin/python`.
+  Filling a note's **body** with the Edit tool is expected and fine.
+- **K3** Search before writing; **ask before creating, registering, or scaffolding** a note.
+  Propose updating an existing note rather than duplicating it.
+- **K4** This system owns `Projects/` only — never touch the vault's `Main/` or `tags/`.
+- **K5** Capture knowledge after work that produced a reusable rule or a non-obvious fix:
+  rules and gotchas → this file; engineering narrative → the vault. Routine changes need no
+  note.
+
+## 14. Process
+Interview before big decisions. Prototype and get client sign-off before a full build. If a
+client or user request conflicts with a rule here (rebuilding checkout, a light theme,
+scraping at runtime), say so once with the reason, then follow the user's decision.
+
+## 15. Open decisions — ask, don't assume
+- No dev/preview database exists; local `pnpm dev` targets production (D1). Whether to
+  provision one is undecided.
+- `secret: process.env.PAYLOAD_SECRET || ""` masks a missing secret as a deep runtime error
+  instead of a loud boot failure.
+- Branch lifetime, who merges, and stale-branch handling: undefined.
+- `package.json` `"name"` is still `luka-app-tmp` (scaffolding leftover).
+- `POSTGRES_URL` is read in production but missing from `.env.example` (violates E1).
+
+## 16. Reference — local-only, gitignored (see R3)
+- Current status / next steps: newest file in `docs/handoffs/`
+- Invite & access-control spec: `docs/plans/private-group-invite-payload-plan.md`
+- Full project plan: `~/.claude/plans/i-am-building-a-tender-rivest.md`
+- Post-mortems worth reading before re-debugging the same thing: the Payload production-DB
+  connection failure (three chained causes → DB4), the `type: module` CLI fix (→ E3), the
+  protected-branch refresh failure (→ G7), the CMS trim (→ DB1/DB2).
 
 ## Commands
 ```bash
-# Knowledge system
+pnpm dev                              # DANGER D1 — schema push against the production DB
+pnpm build && pnpm start              # prod build (§5)
+pnpm lint · pnpm test · pnpm test:watch
+pnpm generate:types · pnpm generate:importmap
+node scripts/fetch-beatstars.mjs      # rewrites src/data/beatstars-catalogue.json
+gh run list --workflow=refresh-catalogue.yml
+
 KS=~/Dev/knowledge-system; PY="$KS/.venv/bin/python"
-"$PY" "$KS/scripts/detect_project.py" --json                       # which vault project is this repo
 "$PY" "$KS/scripts/search_notes.py" "terms" --project "Luka Rajhl" --json
-"$PY" "$KS/scripts/create_note.py" "Title" --project "Luka Rajhl" --category Architecture --tags a,b --related slug
-"$PY" "$KS/scripts/validate_documents.py" --project "Luka Rajhl"
-# App commands (added once scaffolded): pnpm dev · pnpm build · pnpm test
+"$PY" "$KS/scripts/create_note.py" "Title" --project "Luka Rajhl" --category Architecture --tags a,b
 ```
