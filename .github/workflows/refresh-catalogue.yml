@@ -47,6 +47,10 @@ jobs:
       - name: Fetch latest catalogue
         run: node scripts/fetch-beatstars.mjs
 
+      # The script leaves the file untouched when only its `_generatedAt` stamp
+      # would change, so this gate genuinely short-circuits on a no-op run. It
+      # also refuses to write (and exits 1 above) if the fetch came back
+      # degraded — see the sanity gates in scripts/fetch-beatstars.mjs.
       - name: Merge a refresh PR if the catalogue changed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
