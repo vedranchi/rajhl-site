@@ -13,6 +13,10 @@ export type Beat = {
   title: string;
   time: string;
   plays: number;
+  /** BeatStars cover art (400px webp), or null when the beat has none. */
+  image: string | null;
+  /** Derived from BeatStars price + free/exclusive flags. See the fetch script. */
+  license: { label: string; price: string | null };
   buyUrl: string;
   stream: string;
   playing?: boolean;
@@ -22,6 +26,8 @@ export type Kit = {
   file: string;
   meta: string;
   price: string;
+  /** BeatStars CDN artwork (400px webp), or null when the kit has none. */
+  image: string | null;
   buyUrl: string;
 };
 
@@ -34,19 +40,14 @@ export type Social = {
   url: string;
   icon: SocialKind;
 };
-
-export const marqueeItems: string[] = [
-  "NEW BEATS EVERY FRIDAY",
-  "NOW BOOKING CUSTOM WORK",
-  "FREE LOOPS ON TELEGRAM",
-  "LEASES FROM $25",
-  "MADE IN SKOPJE",
-];
-
 /** BeatStars store root + private Telegram group. */
 export const beatstarsStore = catalogue.store;
+/** The two YouTube channels. The second is addressed by channel ID — stable even if
+    its @rajhlski vanity handle changes. */
+export const youtubeMain = "https://www.youtube.com/@lukarajhl";
+export const youtubeSecond = "https://www.youtube.com/channel/UCU6-wec8KCUzF-qfDaq37oA";
+
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
-export const telegramMembers = "1,230+";
 
 /** Real BeatStars catalogue (top-10 snapshot — see scripts/fetch-beatstars.mjs). */
 export const beats: Beat[] = catalogue.beats;
@@ -58,15 +59,17 @@ export const hasMoreBeats = catalogueTotals.beats > catalogueShown.beats;
 export const hasMoreKits = catalogueTotals.kits > catalogueShown.kits;
 
 export const socials: Social[] = [
-  { name: "BeatStars", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
-  { name: "YouTube", sub: "Type beats & breakdowns", handle: "@lukarajhl", url: "https://www.youtube.com/@lukarajhl", icon: "youtube" },
+  { name: "My Beat Store", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
+  { name: "YouTube", sub: "Type beats & breakdowns", handle: "@lukarajhl", url: youtubeMain, icon: "youtube" },
+  { name: "YouTube", sub: "Second channel", handle: "@rajhlski", url: youtubeSecond, icon: "youtube" },
   { name: "Instagram", sub: "Studio & snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
-  { name: "Telegram", sub: `Free loops · ${telegramMembers} subscribers`, handle: "Private group", url: telegramInvite, icon: "telegram" },
+  { name: "Telegram", sub: "Free loops & early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */
 export const channelBadges: { label: string; url: string }[] = [
-  { label: "SUBSCRIBE ►", url: "https://www.youtube.com/@lukarajhl?sub_confirmation=1" },
+  { label: "SUBSCRIBE ►", url: `${youtubeMain}?sub_confirmation=1` },
+  { label: "SUBSCRIBE 2 ►", url: `${youtubeSecond}?sub_confirmation=1` },
   { label: "FOLLOW ★", url: "https://www.instagram.com/luka.rajhl/" },
   { label: "JOIN ✈", url: telegramInvite },
   { label: "BEATSTARS ♪", url: beatstarsStore },
@@ -75,6 +78,8 @@ export const channelBadges: { label: string; url: string }[] = [
 /** Spotify playlist embedded next to the invite form (official embed iframe). */
 export const spotifyPlaylist = {
   id: "7JRpQCqP4BIrO0Wk35MaMD",
+  /** Spotify IFrame API addresses content by URI, not embed URL. */
+  uri: "spotify:playlist:7JRpQCqP4BIrO0Wk35MaMD",
   embedUrl: "https://open.spotify.com/embed/playlist/7JRpQCqP4BIrO0Wk35MaMD?utm_source=generator&theme=0",
   openUrl: "https://open.spotify.com/playlist/7JRpQCqP4BIrO0Wk35MaMD",
 };
@@ -84,6 +89,9 @@ export type PlaylistTrack = {
   artist: string;
   src: string;
   total: string;
+  plays: number;
+  image: string | null;
+  license: { label: string; price: string | null };
   buyUrl: string;
 };
 
@@ -98,6 +106,9 @@ export const playlist: PlaylistTrack[] = beats.map((b) => ({
   artist: "Luka Rajhl",
   src: b.stream,
   total: b.time || "0:00",
+  plays: b.plays,
+  image: b.image,
+  license: b.license,
   buyUrl: b.buyUrl,
 }));
 
@@ -109,23 +120,9 @@ const top = catalogue.topBeat;
 export const nowPlaying = {
   title: top?.title ?? "Retro Test Loop",
   artist: top?.artist ?? "Luka Rajhl",
+  image: top?.image ?? null,
   src: top?.stream ?? "/audio/placeholder-loop.wav",
   fallbackSrc: "/audio/placeholder-loop.wav",
   total: top?.total || "0:15",
   buyUrl: top?.buyUrl ?? beatstarsStore,
-};
-
-export const about = {
-  specs: [
-    { k: "Artist", v: "Luka Rajhl" },
-    { k: "Location", v: "Skopje, Macedonia" },
-    { k: "Genre", v: "Trap · Ambient · Lo-fi" },
-    { k: "Since", v: "2018" },
-    { k: "Setup", v: "FL Studio · analog outboard" },
-  ] as { k: string; v: string }[],
-  status: "Available for work",
-  bio:
-    "Producer and beatmaker out of Skopje, crafting dust-warm 808s, cinematic keys and " +
-    "hard-swinging drums. Beats and kits ship worldwide through BeatStars — from bedroom " +
-    "demos to placements. Slide into the DMs for custom work.",
 };

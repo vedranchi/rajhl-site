@@ -15,7 +15,7 @@ const display = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Luka Rajhl — Beat Producer",
+  title: "Luka Rajhl - Beat Producer",
   description:
     "Dust-warm 808s, cinematic keys and hard-swinging drums from Skopje. Lease beats and download kits on BeatStars.",
 };
@@ -27,7 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${mono.variable} ${display.variable}`}>
-      <body>{children}</body>
+      <body>
+        <noscript>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }
