@@ -1,3 +1,4 @@
+import { SiteNav } from "@/components/site/SiteNav";
 import { Hero } from "@/components/site/Hero";
 import { SectionCue } from "@/components/site/SectionCue";
 import { IpodSection } from "@/components/site/IpodSection";
@@ -13,7 +14,8 @@ const YEAR = new Date().getFullYear(); // module scope: Date in render trips rea
 export default function Home() {
   return (
     <>
-      <main>
+      <SiteNav />
+      <main id="top">
         <Hero />
         <SectionCue label="Explore" />
         <ChannelsSection />

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 /**
  * In-page navigation to a section. Stays an <a href="#id"> so it keeps native
@@ -12,13 +12,15 @@ export function ScrollLink({
   targetId,
   className,
   children,
+  ...rest
 }: {
   targetId: string;
   className?: string;
   children: ReactNode;
-}) {
+} & Omit<ComponentPropsWithoutRef<"a">, "href" | "onClick" | "className" | "children">) {
   return (
     <a
+      {...rest}
       className={className}
       href={`#${targetId}`}
       onClick={(e) => {

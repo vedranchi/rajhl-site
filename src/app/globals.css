@@ -35,6 +35,7 @@
   --r: 16px;
   --r-sm: 10px;
   --dock-h: 84px;
+  --nav-h: 68px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -95,6 +96,69 @@ a { color: inherit; text-decoration: none; }
   border-radius: 4px;
 }
 
+/* Layer scale. Only systemic layers get a z-index: page grain -1/-2,
+   player dock 60, site nav 70. Nothing else should introduce one. */
+
+/* ---------- site nav ---------- */
+
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+  height: var(--nav-h);
+  display: flex; align-items: center;
+  /* Opaque enough that the small mono links clear AA contrast even where the
+     bar sits over the dark Inner Circle band; still frosted over light content. */
+  background: rgba(240, 238, 247, 0.86);
+  backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--hair);
+}
+.nav-inner {
+  width: 100%; max-width: 1180px; margin: 0 auto;
+  padding: 0 clamp(18px, 4vw, 40px);
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+
+.nav-mark {
+  font-family: var(--display);
+  font-size: 1.32rem; line-height: 1;
+  letter-spacing: 0.02em; color: var(--text);
+  white-space: nowrap;
+  transition: color 0.3s var(--ease);
+}
+.nav-mark:hover { color: var(--accent-hi); }
+
+.nav-list {
+  display: flex; align-items: center; gap: clamp(14px, 2.4vw, 30px);
+  list-style: none; margin: 0; padding: 0;
+}
+.nav-link {
+  position: relative; display: block;
+  padding: 8px 2px;
+  font-size: 0.74rem; letter-spacing: 0.1em;
+  color: var(--muted); white-space: nowrap;
+  transition: color 0.3s var(--ease);
+}
+.nav-link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 2px;
+  height: 1px; background: currentColor;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.35s var(--ease);
+}
+.nav-link:hover { color: var(--text); }
+.nav-link:hover::after { transform: scaleX(1); }
+.nav-link.is-active { color: var(--accent-hi); }
+.nav-link.is-active::after { transform: scaleX(1); }
+
+/* Fixed bar must not sit on top of a heading when a link jumps to it. */
+.section, .band, .podwrap, .circle { scroll-margin-top: var(--nav-h); }
+
+@media (max-width: 560px) {
+  :root { --nav-h: 60px; }
+  .nav-mark { display: none; }
+  .nav-inner { justify-content: center; }
+  .nav-list { gap: clamp(12px, 4.5vw, 22px); }
+  .nav-link { font-size: 0.7rem; letter-spacing: 0.06em; }
+}
+
 /* ---------- layout primitives ---------- */
 
 .shell { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
@@ -136,7 +200,7 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   /* padding-block only: a `padding` shorthand here would reset .shell's
      horizontal padding to 0 (same specificity, later in the sheet). */
-  padding-block: clamp(90px, 14vh, 150px) clamp(48px, 8vh, 90px);
+  padding-block: calc(var(--nav-h) + clamp(56px, 10vh, 110px)) clamp(48px, 8vh, 90px);
 }
 
 .hero-name {
