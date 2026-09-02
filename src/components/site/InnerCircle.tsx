@@ -52,7 +52,6 @@ export function InnerCircle() {
     <section className="circle" id="join">
       <div className="shell circle-inner">
         <Reveal>
-          <span className="eyebrow">By request</span>
           <h2 className="circle-title">The Inner Circle</h2>
           <p className="circle-lede">
             A private Telegram room where beats go out before the store sees them, plus loops,

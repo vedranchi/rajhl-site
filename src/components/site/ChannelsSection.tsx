@@ -15,7 +15,6 @@ export function ChannelsSection() {
         <Reveal>
           <div className="sec-head">
             <div>
-              <span className="eyebrow">Elsewhere</span>
               <h2 className="sec-title">Channels</h2>
             </div>
             <p className="sec-note">

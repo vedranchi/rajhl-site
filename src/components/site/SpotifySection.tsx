@@ -147,7 +147,6 @@ export function SpotifySection() {
       <Reveal>
         <div className="sec-head">
           <div>
-            <span className="eyebrow">Now spinning</span>
             <h2 className="sec-title">On Spotify</h2>
           </div>
           <p className="sec-note">The official playlist, updated as new beats land.</p>

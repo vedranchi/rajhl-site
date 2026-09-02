@@ -6,7 +6,6 @@ export function Hero() {
   return (
     <header className="hero shell">
       <Reveal>
-        <span className="eyebrow">Beat Producer · Skopje, MK</span>
         <h1 className="hero-name">LUKA RAJHL</h1>
         <p className="hero-sub">Trap, ambient and lo-fi</p>
       </Reveal>

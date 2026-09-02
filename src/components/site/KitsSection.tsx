@@ -9,7 +9,6 @@ export function KitsSection() {
       <Reveal>
         <div className="sec-head">
           <div>
-            <span className="eyebrow">For producers</span>
             <h2 className="sec-title">Sound Kits</h2>
           </div>
           <p className="sec-note">

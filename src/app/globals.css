@@ -101,16 +101,6 @@ a { color: inherit; text-decoration: none; }
 
 .section { padding-block: clamp(64px, 10vw, 132px); position: relative; }
 
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase;
-  color: var(--amber);
-}
-.eyebrow::before {
-  content: ""; width: 22px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--amber));
-}
-
 .sec-head {
   /* Note sits under the headline, not floating in the top-right corner. */
   display: block;
@@ -122,7 +112,7 @@ a { color: inherit; text-decoration: none; }
   font-size: clamp(1.95rem, 4.4vw, 3.1rem);
   line-height: 1;
   letter-spacing: 0.01em;
-  margin: 12px 0 0;
+  margin: 0;
   color: var(--text);
 }
 
@@ -153,7 +143,7 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--display);
   font-size: clamp(2.6rem, 7.5vw, 5rem);
   line-height: 0.92;
-  margin: 18px 0 0;
+  margin: 0;
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -420,10 +410,7 @@ a { color: inherit; text-decoration: none; }
   background-size: 4px 4px;
 }
 
-.podwrap .sec-title,
-.podwrap .eyebrow { color: #2A2634; }
-.podwrap .eyebrow { color: #6B5FA0; }
-.podwrap .eyebrow::before { background: linear-gradient(90deg, transparent, #6B5FA0); }
+.podwrap .sec-title { color: #2A2634; }
 .podwrap .sec-note { color: #5A5468; }
 
 .pod-grid {
@@ -639,16 +626,13 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
   display: flex; flex-direction: column; align-items: center;
 }
-.circle-inner .eyebrow::before { display: none; }
 
-.circle-inner .eyebrow { color: #C9BEEE; }
-.circle-inner .eyebrow::before { background: none; }
 .circle-title {
   color: #F6F4FB;
   font-family: var(--display);
   font-size: clamp(2.4rem, 6vw, 4rem);
   line-height: 0.98;
-  margin: 16px 0 0;
+  margin: 0;
 }
 .circle-lede {
   margin: 20px 0 0;
