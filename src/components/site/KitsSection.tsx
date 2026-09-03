@@ -21,7 +21,15 @@ export function KitsSection() {
         <div className="rail" role="list" aria-label="Sound kits">
           {kits.map((k) => (
             <article className="kit" role="listitem" key={k.file}>
-              <div className="kit-art">
+              {/* The artwork is the card's second route to the kit page — same
+                  destination as Get. Labelled because the img itself is decorative. */}
+              <a
+                className="kit-art"
+                href={k.buyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${k.file} on BeatStars`}
+              >
                 {k.image ? (
                   // Plain <img>, not next/image: the optimizer would refetch the
                   // asset from BeatStars server-side. Loading it directly keeps
@@ -31,7 +39,7 @@ export function KitsSection() {
                 ) : (
                   <BeatStarsIcon aria-hidden="true" />
                 )}
-              </div>
+              </a>
               <h3 className="kit-name">{k.file}</h3>
               <p className="kit-meta">{k.meta}</p>
               <div className="kit-foot">
