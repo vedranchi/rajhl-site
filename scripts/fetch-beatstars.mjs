@@ -24,6 +24,7 @@ const MEMBER_ID = "MR1947497"; // Luka Rajhl (beatstars.com/rajhl)
 const ALGOLIA_APP = "NMMGZJQ6QI";
 const ALGOLIA_KEY = "b3513eb709fe8f444b4d5c191b63ea47"; // public search key, from BeatStars' own web bundle
 const REFERER = "https://www.beatstars.com/";
+const STORE = "https://www.beatstars.com/rajhl"; // the artist's public store root
 const MAX_ITEMS = 10; // publish at most this many beats / kits; link out for the rest
 
 // Sanity gates. The refresh workflow auto-merges this file to `main` and
@@ -195,7 +196,7 @@ async function main() {
       }
     : null;
 
-  // --- Kits: rank by plays too, keep up to MAX_ITEMS, canonical /sound-kits/ URL ---
+  // --- Kits: rank by plays too, keep up to MAX_ITEMS, handle-scoped kit URL ---
   const { hits: kitHits, nbHits: kitsTotal } = await algoliaAll("public_prod_inventory_soundkit_index");
   const topKits = [...kitHits].sort((a, b) => plays(b) - plays(a)).slice(0, MAX_ITEMS);
   const kits = [];
@@ -213,7 +214,13 @@ async function main() {
       meta: desc || "Sound kit",
       price: money(h.price ?? d.price ?? 0),
       image,
-      buyUrl: d.relative_uri ? `https://www.beatstars.com${d.relative_uri}` : `https://www.beatstars.com/sound-kits/${d.title_uri}`,
+      // Must be scoped to the artist handle. `relative_uri` alone
+      // (www.beatstars.com/sound-kits/<slug>) is not a route in BeatStars' app:
+      // it falls through to the generic Sound Kits browse page. The handle-scoped
+      // form is what their own `share_uri` short link resolves to. `propage_uri`
+      // (rajhl.beatstars.com) is NOT usable — it 302s to /private-pro-page, the
+      // same trap as the bsta.rs/k/<id> short link (CLAUDE.md P3).
+      buyUrl: `${STORE}${d.relative_uri ?? `/sound-kits/${d.title_uri}`}`,
     });
   }
 
@@ -226,7 +233,7 @@ async function main() {
     _generatedAt: new Date().toISOString(),
     _source: "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
     _popularityMetric: "activities.play (BeatStars play count)",
-    store: "https://www.beatstars.com/rajhl",
+    store: STORE,
     totals: { beats: beatsTotal, kits: kitsTotal },
     shown: { beats: beats.length, kits: kits.length },
     topBeat,
