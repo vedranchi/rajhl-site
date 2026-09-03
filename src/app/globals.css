@@ -200,12 +200,19 @@ a { color: inherit; text-decoration: none; }
 
 .hero {
   min-height: min(94svh, 860px);
-  display: flex; flex-direction: column; justify-content: center;
+  /* Two columns: the lede keeps the focal weight, the featured kit fills the
+     right-hand void. Collapses to one column under 900px (see responsive). */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 268px);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
   position: relative;
   /* padding-block only: a `padding` shorthand here would reset .shell's
      horizontal padding to 0 (same specificity, later in the sheet). */
   padding-block: calc(var(--nav-h) + clamp(56px, 10vh, 110px)) clamp(48px, 8vh, 90px);
 }
+
+.hero-lede { min-width: 0; }
 
 .hero-name {
   font-family: var(--display);
@@ -225,6 +232,43 @@ a { color: inherit; text-decoration: none; }
 .hero-bio { margin: 26px 0 0; max-width: 52ch; font-size: 0.92rem; line-height: 1.85; color: var(--muted); }
 
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; }
+
+/* Featured kit — deliberately not a .kit card: a hairline-ruled column so it
+   reads as part of the hero composition rather than a section pasted into it. */
+.hero-feature { min-width: 0; }
+.hero-kit {
+  display: flex; flex-direction: column;
+  padding-left: clamp(18px, 2vw, 26px);
+  border-left: 1px solid var(--hair);
+  color: inherit; text-decoration: none;
+  transition: border-color 0.45s var(--ease);
+}
+.hero-kit:hover { border-color: rgba(95, 83, 151, 0.45); }
+.hero-kit-label {
+  font-size: 0.62rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--faint);
+}
+.hero-kit-art {
+  width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover;
+  margin-top: 14px;
+  border-radius: var(--r-sm); border: 1px solid var(--hair);
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+.hero-kit:hover .hero-kit-art {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -26px rgba(30, 24, 56, 0.55);
+}
+.hero-kit-name { margin-top: 14px; font-size: 0.78rem; line-height: 1.45; color: var(--text); }
+.hero-kit-meta { margin-top: 6px; font-size: 0.68rem; line-height: 1.6; color: var(--faint); }
+.hero-kit-foot {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-top: 14px;
+}
+.hero-kit-price { font-family: var(--display); font-size: 1.15rem; color: var(--amber); }
+.hero-kit-go {
+  font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-hi);
+}
 
 
 /* Section transition (SectionCue): the page's one piece of ambient motion. */
@@ -791,6 +835,26 @@ a { color: inherit; text-decoration: none; }
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
+  /* Hero stacks: the featured kit drops under the lede, capped so it stays a
+     footnote to the title rather than a second hero. */
+  .hero { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .hero-kit {
+    max-width: 440px; margin-top: 8px;
+    padding-left: 0; padding-top: 26px;
+    border-left: 0; border-top: 1px solid var(--hair);
+    /* Art beside the copy instead of above it, so the stacked hero stays short
+       and the title keeps the fold. */
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-areas: "art label" "art name" "art meta" "art foot";
+    align-content: start; column-gap: 16px;
+  }
+  .hero-kit-label { grid-area: label; }
+  .hero-kit-art { grid-area: art; align-self: start; margin-top: 0; }
+  .hero-kit-name { grid-area: name; margin-top: 8px; }
+  .hero-kit-meta { grid-area: meta; }
+  .hero-kit-foot { grid-area: foot; margin-top: 12px; }
+  .hero-kit:hover { border-color: rgba(95, 83, 151, 0.45); }
   .join { grid-template-columns: 1fr; }
   .pod-grid { grid-template-columns: 1fr; grid-template-areas: "head" "pod" "list"; row-gap: clamp(28px, 6vw, 40px); }
 }

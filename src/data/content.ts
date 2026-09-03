@@ -58,6 +58,11 @@ export const catalogueShown = catalogue.shown;
 export const hasMoreBeats = catalogueTotals.beats > catalogueShown.beats;
 export const hasMoreKits = catalogueTotals.kits > catalogueShown.kits;
 
+/** Newest kit, featured beside the hero title. Matched by name so a catalogue
+    refresh can't drop it; falls back to the first kit if it ever disappears. */
+export const featuredKit: Kit | undefined =
+  kits.find((k) => k.file.toUpperCase().includes("EXIMIA")) ?? kits[0];
+
 export const socials: Social[] = [
   { name: "My Beat Store", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
   { name: "YouTube", sub: "Type beats & breakdowns", handle: "@lukarajhl", url: youtubeMain, icon: "youtube" },
