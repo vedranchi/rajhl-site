@@ -42,7 +42,6 @@ export function Hero() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <span className="hero-kit-label">Latest kit</span>
             {featuredKit.image ? (
               // Plain <img>, not next/image: the optimizer would refetch the asset
               // from BeatStars server-side. See KitsSection for the same note (P2).
