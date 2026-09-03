@@ -51,7 +51,30 @@ export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
 
 /** Real BeatStars catalogue (top-10 snapshot — see scripts/fetch-beatstars.mjs). */
 export const beats: Beat[] = catalogue.beats;
-export const kits: Kit[] = catalogue.kits;
+
+/**
+ * Client-authored kit descriptions, matched on the kit title. BeatStars' own
+ * blurbs are marketing prose that the fetch script has to truncate; these say
+ * what is actually in the box. They live here, not in
+ * `beatstars-catalogue.json`, because the scheduled refresh rewrites that file
+ * (CLAUDE.md P3/G6). Kits with no entry keep their BeatStars blurb.
+ */
+const kitDescriptions: { match: string; meta: string }[] = [
+  { match: "EXIMIA", meta: "100 vocal chops" },
+  { match: "SEPIA", meta: "70 VOCAL CHOPS, 30 ONE SHOTS, 70 drum sounds" },
+  {
+    match: "BUNDLE",
+    meta:
+      "300+ SOUNDS INCLUDING 190 DRUM SOUNDS, 20 FREE LOOPS, 35 VOCAL CHOPS, " +
+      "10 STARTERS, 35 ONE SHOTS AND 3 MIXER TRACKS",
+  },
+];
+
+export const kits: Kit[] = catalogue.kits.map((k) => {
+  const override = kitDescriptions.find((d) => k.file.toUpperCase().includes(d.match));
+  return override ? { ...k, meta: override.meta } : k;
+});
+
 /** Full store totals (the page shows the most-popular subset). */
 export const catalogueTotals = catalogue.totals;
 export const catalogueShown = catalogue.shown;
