@@ -207,10 +207,13 @@ a { color: inherit; text-decoration: none; }
   /* Two columns, packed to the left so the kit sits beside the name rather
      than pinned to the far edge. Collapses to one column under 900px. */
   display: grid;
-  grid-template-columns: minmax(0, 30rem) minmax(0, 400px);
+  /* The right column carries a 16:9 video, which is wider and shorter than the
+     square kit this grid was sized for. It gets the width back off the gap:
+     30rem + 32rem + 96px still lands inside the 1180px shell. */
+  grid-template-columns: minmax(0, 30rem) minmax(0, 32rem);
   justify-content: start;
   align-items: center;
-  gap: clamp(24px, 10vw, 176px);
+  gap: clamp(24px, 5vw, 96px);
   position: relative;
   /* padding-block only: a `padding` shorthand here would reset .shell's
      horizontal padding to 0 (same specificity, later in the sheet). */
@@ -281,11 +284,20 @@ a { color: inherit; text-decoration: none; }
 /* Latest video — the same plate as the kit, so swapping one for the other does
    not change the hero's balance. Only the artwork differs: 16:9 instead of
    square, with the play badge sitting on it. */
+/* The media is the card: the thumbnail runs edge to edge and the text sits in
+   its own padding underneath, so none of the column's width is spent on a
+   frame around the picture. */
+.hero-vid { padding: 0 0 clamp(16px, 1.5vw, 20px); overflow: hidden; }
+.hero-vid .hero-kit-name,
+.hero-vid .hero-kit-meta,
+.hero-vid .hero-kit-foot { padding-inline: clamp(16px, 1.5vw, 20px); }
+.hero-vid .hero-kit-name { margin-top: 15px; }
 .hero-vid-art { position: relative; display: block; }
 .hero-vid-thumb {
   /* YouTube's hqdefault is a 480x360 letterbox of a 16:9 frame; cropping to
      16:9 lands exactly on the frame and drops the black bars. */
   aspect-ratio: 16 / 9;
+  border-radius: 0; border: 0; border-bottom: 1px solid var(--hair);
 }
 .hero-vid-play {
   position: absolute; left: 12px; bottom: 12px;
@@ -942,7 +954,7 @@ a { color: inherit; text-decoration: none; }
 /* Between the stack point and full width there is not enough room for the wide
    gap: it would squeeze the name column until LUKA RAJHL ran into the plate. */
 @media (max-width: 1100px) {
-  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 330px); gap: clamp(24px, 3vw, 40px); }
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: clamp(24px, 3vw, 44px); }
 }
 
 @media (max-width: 900px) {
@@ -959,11 +971,14 @@ a { color: inherit; text-decoration: none; }
     align-content: start; column-gap: 16px;
   }
   .hero-kit-art { grid-area: art; align-self: start; }
-  /* The video's art is wrapped for the play badge, so the wrapper takes the
-     grid slot and the badge shrinks with the smaller thumbnail. */
-  .hero-vid-art { grid-area: art; align-self: start; }
-  .hero-vid-play { left: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 9px; }
-  .hero-vid-play svg { width: 15px; height: 15px; }
+  /* The kit falls back to art-beside-copy at this width; the video does not.
+     A 16:9 frame shrunk into a 108px column is unreadable, and it is the one
+     thing the hero is pointing at, so it stays a full-width stacked card. */
+  .hero-vid {
+    display: flex; flex-direction: column;
+    max-width: 30rem; column-gap: 0;
+  }
+  .hero-vid-art { grid-area: auto; align-self: stretch; }
   .hero-kit-name { grid-area: name; margin-top: 0; font-size: 0.85rem; }
   .hero-kit-meta { grid-area: meta; }
   .hero-kit-foot { grid-area: foot; margin-top: 12px; }
