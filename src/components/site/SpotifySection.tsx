@@ -149,7 +149,7 @@ export function SpotifySection() {
           <div>
             <h2 className="sec-title">On Spotify</h2>
           </div>
-          <p className="sec-note">The official playlist, updated as new beats land.</p>
+          <p className="sec-note">The music I&apos;ve produced</p>
         </div>
       </Reveal>
 

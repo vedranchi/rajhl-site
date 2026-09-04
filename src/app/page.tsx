@@ -24,7 +24,7 @@ export default function Home() {
         <InnerCircle />
         <SpotifySection />
         <footer className="footer shell">
-          <span>© {YEAR} Luka Rajhl · Skopje, MK</span>
+          <span>© {YEAR} Luka Rajhl</span>
           <a href={beatstarsStore} target="_blank" rel="noopener noreferrer">
             Licensing on BeatStars ↗
           </a>
