@@ -29,6 +29,11 @@ const doc = {
   instagram: "@luka",
   ip: "203.0.113.5",
   createdAt: "2026-07-12T10:00:00.000Z",
+  tracks: [
+    { path: "requests/2026-07/abc/1.mp3", originalName: "night drive.mp3", sizeBytes: 4_000_000, url: "https://storage.test/1?token=a" },
+    { path: "requests/2026-07/abc/2.mp3", originalName: "glass.mp3", sizeBytes: 5_000_000, url: "https://storage.test/2?token=b" },
+    { path: "requests/2026-07/abc/3.mp3", originalName: "pearl.mp3", sizeBytes: 6_000_000, url: "https://storage.test/3?token=c" },
+  ],
 };
 
 describe("sendInviteEmail", () => {
@@ -44,6 +49,10 @@ describe("sendInviteEmail", () => {
     expect(payload.from).toBe("Private Telegram <onboarding@resend.dev>"); // fallback
     expect(payload.subject).toBe("@luka would like to join your private Telegram group");
     expect(payload.text).toContain("@luka");
+    // every beat has to be reachable straight from the email
+    expect(payload.text).toContain("night drive.mp3");
+    expect(payload.text).toContain("https://storage.test/1?token=a");
+    expect(payload.text).toContain("https://storage.test/3?token=c");
     expect(payload.text).toContain("203.0.113.5");
     expect(payload.text).toContain("2026-07-12T10:00:00.000Z");
   });
@@ -71,6 +80,19 @@ describe("sendInviteEmail", () => {
     sendMock.mockRejectedValue(new Error("network down"));
     const res = await sendInviteEmail(doc);
     expect(res).toEqual({ ok: false, error: "network down" });
+  });
+
+  it("says so plainly when a track link could not be signed", async () => {
+    await sendInviteEmail({
+      ...doc,
+      tracks: [{ path: "requests/x/1.mp3", originalName: "a.mp3", sizeBytes: 1, url: "" }],
+    });
+    expect(sendMock.mock.calls[0][0].text).toContain("link unavailable");
+  });
+
+  it("does not break when a request somehow has no tracks", async () => {
+    await sendInviteEmail({ instagram: "@x" });
+    expect(sendMock.mock.calls[0][0].text).toContain("(none attached)");
   });
 
   it("falls back to the current time when createdAt is absent", async () => {

@@ -18,7 +18,7 @@ export type SendInviteEmailResult = { ok: true } | { ok: false; error: string };
 
 /** The subset of a lead row the email template interpolates (all validator-sanitised). */
 export type InviteEmailInput = Pick<InviteRequest, "instagram"> &
-  Partial<Pick<InviteRequest, "ip" | "createdAt">>;
+  Partial<Pick<InviteRequest, "ip" | "createdAt" | "tracks">>;
 
 export async function sendInviteEmail(doc: InviteEmailInput): Promise<SendInviteEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -27,7 +27,7 @@ export async function sendInviteEmail(doc: InviteEmailInput): Promise<SendInvite
     return { ok: false, error: "RESEND_API_KEY / INVITE_NOTIFY_TO not configured" };
   }
 
-  const { instagram, ip } = doc;
+  const { instagram, ip, tracks } = doc;
   const created = doc.createdAt ? new Date(doc.createdAt) : new Date();
   const skopje = created.toLocaleString("en-GB", { timeZone: "Europe/Skopje", hour12: false });
 
@@ -35,6 +35,15 @@ export async function sendInviteEmail(doc: InviteEmailInput): Promise<SendInvite
     "Instagram",
     "---------",
     instagram ?? "unavailable",
+    "",
+    "Beats",
+    "-----",
+    ...(tracks?.length
+      ? tracks.flatMap((t, i) => [
+          `${i + 1}. ${t.originalName || t.path}`,
+          `   ${t.url || "(link unavailable — open the request in the admin)"}`,
+        ])
+      : ["(none attached)"]),
     "",
     "Requested At",
     "------------",
@@ -46,7 +55,7 @@ export async function sendInviteEmail(doc: InviteEmailInput): Promise<SendInvite
     "",
     `${instagram} has requested to join your private Telegram group.`,
     "",
-    "Reply to them on Instagram with the group invite if it is a fit.",
+    "Listen first, then reply on Instagram with the group invite if it is a fit.",
   ].join("\n");
 
   try {

@@ -21,6 +21,8 @@ export const InviteRequests: CollectionConfig = {
     group: "Leads",
     useAsTitle: "instagram",
     defaultColumns: ["instagram", "status", "createdAt"],
+    // `tracks` deliberately absent from defaultColumns: an array column renders
+    // as a count, which tells a reviewer nothing. Open the row for the links.
     listSearchableFields: ["instagram", "username", "email"],
     description: "Inbound Private Telegram requests. Read-only leads; edit status/notes only.",
     pagination: { defaultLimit: 25 },
@@ -64,6 +66,25 @@ export const InviteRequests: CollectionConfig = {
       // Legacy, as above. The form no longer asks applicants for an email.
       index: true,
       admin: { readOnly: true, description: "Legacy field from the old invite form." },
+    },
+    {
+      name: "tracks",
+      type: "array",
+      // The applicant's three best solo beats, stored in a private Supabase
+      // bucket. Only the path is authoritative; `url` is a long-lived signed
+      // link so the beats are playable straight from this row, which is what
+      // makes a request reviewable in one place. Both are written by the server
+      // action, never by a form post.
+      admin: {
+        readOnly: true,
+        description: "The three solo beats attached to this request.",
+      },
+      fields: [
+        { name: "path", type: "text", required: true },
+        { name: "originalName", type: "text" },
+        { name: "sizeBytes", type: "number" },
+        { name: "url", type: "text", admin: { description: "Signed link, valid for a year." } },
+      ],
     },
     {
       name: "status",

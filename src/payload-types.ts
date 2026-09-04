@@ -164,6 +164,21 @@ export interface InviteRequest {
    */
   email?: string | null;
   /**
+   * The three solo beats attached to this request.
+   */
+  tracks?:
+    | {
+        path: string;
+        originalName?: string | null;
+        sizeBytes?: number | null;
+        /**
+         * Signed link, valid for a year.
+         */
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Lifecycle, set automatically. Filter by 'Email failed' to find leads whose owner notification didn't send; mark 'Spam' to flag abuse.
    */
   status: 'new' | 'emailed' | 'email_failed' | 'duplicate' | 'spam';
@@ -285,6 +300,15 @@ export interface InviteRequestsSelect<T extends boolean = true> {
   instagram?: T;
   username?: T;
   email?: T;
+  tracks?:
+    | T
+    | {
+        path?: T;
+        originalName?: T;
+        sizeBytes?: T;
+        url?: T;
+        id?: T;
+      };
   status?: T;
   source?: T;
   ip?: T;
