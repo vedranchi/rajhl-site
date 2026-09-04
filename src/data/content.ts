@@ -44,17 +44,55 @@ export type Social = {
 };
 /** BeatStars store root + private Telegram group. */
 export const beatstarsStore = catalogue.store;
-/** The two YouTube channels, which serve different purposes: `youtubeTutorials`
-    ("Luka Rajhl", UCMcvYZ58vysUkGQbBfalkxQ) publishes production breakdowns and
-    how-tos; `youtubeTypeBeats` ("lukarajhl", @rajhlski) publishes free type
-    beats. Verified against both channels' upload feeds — don't swap them.
-    The type-beat channel is addressed by channel ID, stable even if its
-    @rajhlski vanity handle changes. */
-export const youtubeTutorials = "https://www.youtube.com/@lukarajhl";
-/** Same channel as `youtubeTutorials`, by ID — the Atom feed the hero's latest
-    video comes from is only addressable by channel ID, not by @handle. */
+/** The two YouTube channels, which serve different purposes: the tutorials
+    channel ("Luka Rajhl") publishes production breakdowns and how-tos; the
+    type-beat channel ("lukarajhl", @rajhlski) publishes free type beats.
+    Verified against both channels' upload feeds, so don't swap them.
+
+    Both are keyed by channel ID because that is the only form the Atom feed
+    accepts (`/feeds/videos.xml?channel_id=`), and it survives a vanity-handle
+    change. The tutorials channel keeps its @handle URL for humans, since that
+    is the link the client shares. */
 export const youtubeTutorialsChannelId = "UCMcvYZ58vysUkGQbBfalkxQ";
-export const youtubeTypeBeats = "https://www.youtube.com/channel/UCU6-wec8KCUzF-qfDaq37oA";
+export const youtubeTypeBeatsChannelId = "UCU6-wec8KCUzF-qfDaq37oA";
+export const youtubeTutorials = "https://www.youtube.com/@lukarajhl";
+export const youtubeTypeBeats = `https://www.youtube.com/channel/${youtubeTypeBeatsChannelId}`;
+
+export type YoutubeChannel = {
+  /** React key and CSS hook. */
+  key: string;
+  /** What the channel is for. It is the card's title: the platform is obvious
+      from the icon, the purpose is not. */
+  name: string;
+  /** What a visitor gets if they subscribe. One sentence. */
+  blurb: string;
+  handle: string;
+  channelId: string;
+  url: string;
+  /** `?sub_confirmation=1` opens YouTube with the subscribe prompt already up. */
+  subscribeUrl: string;
+};
+
+export const youtubeChannels: YoutubeChannel[] = [
+  {
+    key: "tutorials",
+    name: "Tutorials",
+    blurb: "How the beats get made. Breakdowns, sound design and technique, in full.",
+    handle: "@lukarajhl",
+    channelId: youtubeTutorialsChannelId,
+    url: youtubeTutorials,
+    subscribeUrl: `${youtubeTutorials}?sub_confirmation=1`,
+  },
+  {
+    key: "type-beats",
+    name: "Type Beats",
+    blurb: "Free beats to write and record over. New ones most weeks.",
+    handle: "@rajhlski",
+    channelId: youtubeTypeBeatsChannelId,
+    url: youtubeTypeBeats,
+    subscribeUrl: `${youtubeTypeBeats}?sub_confirmation=1`,
+  },
+];
 
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
 
@@ -95,12 +133,12 @@ export const hasMoreKits = catalogueTotals.kits > catalogueShown.kits;
 export const featuredKit: Kit | undefined =
   kits.find((k) => k.file.toUpperCase().includes("EXIMIA")) ?? kits[0];
 
+/** Everywhere else, under the two channel plates. The YouTube channels are not
+    in here: they are the section's subject, not one of its footnotes. */
 export const socials: Social[] = [
-  { name: "My Beat Store", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
-  { name: "Tutorials", sub: "YouTube · breakdowns, technique, sound design", handle: "@lukarajhl", url: youtubeTutorials, icon: "youtube" },
-  { name: "Type Beats", sub: "YouTube · free beats, new drops most weeks", handle: "@rajhlski", url: youtubeTypeBeats, icon: "youtube" },
-  { name: "Instagram", sub: "Studio & snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
-  { name: "Telegram", sub: "Free loops & early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
+  { name: "Beat Store", sub: "Leases and exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
+  { name: "Instagram", sub: "Studio and snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
+  { name: "Telegram", sub: "Free loops and early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */

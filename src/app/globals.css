@@ -438,47 +438,155 @@ a { color: inherit; text-decoration: none; }
   background: linear-gradient(178deg, #CFCADF 0%, #C2BCD6 52%, #CBC6DC 100%);
 }
 
-.channels {
+/* Two channel plates carry the section; everything else is a hairline strip
+   underneath. Equal columns, because the two channels really are equal: the
+   hierarchy in this band is plate vs strip, not plate vs plate. */
+.chans {
   display: grid;
-  /* auto-fill (not auto-fit): a short last row keeps the same column width as
-     the rows above, so every card is one equal cell. */
-  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
-  /* Equal rows: a card whose subtitle wraps must not make its row taller. */
-  grid-auto-rows: 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.2vw, 26px);
+  align-items: stretch;
 }
-.channels > * { display: flex; }
+.chan-slot { display: flex; min-width: 0; }
 
-.channel {
-  flex: 1;
-  display: flex; align-items: center; gap: 18px;
-  min-height: 122px;
-  padding: 24px 26px; border-radius: var(--r);
-  background: rgba(255, 255, 255, 0.72); border: 1px solid var(--hair);
-  transition: transform 0.4s var(--ease), border-color 0.4s var(--ease), background 0.4s var(--ease);
+.chan {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  padding: clamp(20px, 2.1vw, 28px);
+  border-radius: var(--r);
+  background: linear-gradient(168deg, var(--surface-2) 0%, var(--surface) 100%);
+  border: 1px solid var(--hair);
+  box-shadow: 0 20px 44px -34px rgba(30, 24, 56, 0.5);
+  transition: transform 0.45s var(--ease), border-color 0.45s var(--ease),
+    box-shadow 0.45s var(--ease);
 }
-.channel:hover {
-  transform: translateY(-3px);
+.chan:hover {
+  transform: translateY(-4px);
   border-color: rgba(95, 83, 151, 0.4);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 30px 58px -34px rgba(30, 24, 56, 0.55);
 }
 
-.channel-ico {
-  width: 50px; height: 50px; flex: none; border-radius: 13px;
+.chan-head { display: flex; align-items: center; gap: 14px; }
+.chan-ico {
+  width: 44px; height: 44px; flex: none; border-radius: 12px;
   display: grid; place-items: center;
   background: linear-gradient(160deg, #FFFFFF, #EDEAF4);
   border: 1px solid var(--hair-2); color: var(--accent);
   transition: color 0.35s var(--ease), border-color 0.35s var(--ease);
 }
-.channel:hover .channel-ico { color: var(--accent-hi); border-color: rgba(95, 83, 151, 0.45); }
-.channel-ico svg { width: 22px; height: 22px; }
+.chan-ico svg { width: 21px; height: 21px; }
+.chan:hover .chan-ico { color: var(--accent-hi); border-color: rgba(95, 83, 151, 0.45); }
+.chan-id { min-width: 0; }
+.chan-name {
+  font-family: var(--display);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.1; margin: 0; color: var(--text);
+}
+.chan-handle { display: block; margin-top: 6px; font-size: 0.7rem; color: var(--accent); }
+.chan-blurb {
+  margin: 16px 0 0; font-size: 0.78rem; line-height: 1.75; color: var(--muted);
+  max-width: 44ch;
+}
 
-.channel-body { min-width: 0; }
-.channel-name { display: block; font-size: 0.95rem; letter-spacing: 0.01em; }
-.channel-sub { display: block; margin-top: 6px; font-size: 0.72rem; color: var(--faint); }
-.channel-handle { display: block; margin-top: 8px; font-size: 0.7rem; color: var(--accent); }
-.channel-arr { margin-left: auto; align-self: flex-start; color: var(--faint); transition: transform 0.35s var(--ease), color 0.35s var(--ease); }
-.channel:hover .channel-arr { color: var(--accent-hi); transform: translate(2px, -2px); }
+/* Recent uploads. The hero already carries one video large, so the plates show
+   a list of three instead: more of the channel, no second copy of the same
+   thumbnail one screen further down. */
+.chan-vids {
+  list-style: none; margin: clamp(18px, 2vw, 24px) 0 0; padding: 0;
+  border-top: 1px solid var(--hair);
+}
+.chan-vid {
+  display: grid; grid-template-columns: clamp(104px, 11vw, 132px) minmax(0, 1fr);
+  align-items: center; gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hair);
+}
+.chan-vids li:last-child .chan-vid { border-bottom: 0; }
+.chan-vid-art {
+  position: relative; display: block; overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-sm); border: 1px solid var(--hair);
+  background: var(--bg-2);
+}
+.chan-vid-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.5s var(--ease);
+}
+.chan-vid:hover .chan-vid-art img { transform: scale(1.05); }
+/* The badge only appears on hover: three permanent play badges in one plate
+   would be noise, but the thumbnail still has to say "video" on contact. */
+.chan-play {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: #F3F0FA; background: rgba(30, 24, 56, 0.42);
+  opacity: 0; transition: opacity 0.35s var(--ease);
+}
+.chan-play svg { width: 26px; height: 26px; margin-left: 1px; }
+.chan-vid:hover .chan-play, .chan-vid:focus-visible .chan-play { opacity: 1; }
+/* Touch has no hover to reveal the badge, so it stays on, over a scrim light
+   enough to leave the frame readable. */
+@media (hover: none) {
+  .chan-play {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(30, 24, 56, 0.55), transparent 62%);
+    place-items: end start; padding: 0 0 6px 8px;
+  }
+  .chan-play svg { width: 20px; height: 20px; }
+}
+.chan-vid-text { min-width: 0; }
+.chan-vid-title {
+  font-size: 0.78rem; line-height: 1.5; color: var(--text);
+  /* Two lines, then ellipsis: type-beat titles run long and a third line would
+     break the row rhythm against the thumbnail. */
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.3s var(--ease);
+}
+.chan-vid:hover .chan-vid-title { color: var(--accent-hi); }
+.chan-vid-meta {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-top: 7px; font-size: 0.66rem; color: var(--faint);
+}
+/* Play count as an LED-style readout, the same amber the kit prices and the
+   hero card use (DS2). */
+.chan-plays { font-family: var(--display); font-size: 0.78rem; color: var(--amber); }
+
+/* margin-top:auto pins the buttons to the bottom, so two plates with unequal
+   titles still line their CTAs up. */
+.chan-foot {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  margin-top: auto; padding-top: clamp(20px, 2.4vw, 26px);
+}
+
+/* Everything else: one hairline strip, deliberately lighter than the plates. */
+.elsewhere {
+  list-style: none; margin: clamp(26px, 3.6vw, 42px) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--hair-2);
+}
+.elsewhere li { min-width: 0; }
+.elsewhere li + li { border-left: 1px solid var(--hair); }
+.elsewhere a {
+  display: flex; align-items: center; gap: 12px;
+  min-width: 0; padding: 20px clamp(14px, 1.6vw, 22px);
+  transition: background 0.35s var(--ease);
+}
+.elsewhere li:first-child a { padding-left: 0; }
+.elsewhere a:hover { background: rgba(255, 255, 255, 0.5); }
+.elsewhere-ico {
+  width: 30px; height: 30px; flex: none;
+  display: grid; place-items: center; color: var(--accent);
+  transition: color 0.35s var(--ease);
+}
+.elsewhere-ico svg { width: 19px; height: 19px; }
+.elsewhere a:hover .elsewhere-ico { color: var(--accent-hi); }
+.elsewhere-text { min-width: 0; }
+.elsewhere-name { display: block; font-size: 0.82rem; color: var(--text); }
+.elsewhere-sub { display: block; margin-top: 5px; font-size: 0.68rem; color: var(--faint); }
+.elsewhere-arr {
+  margin-left: auto; color: var(--faint);
+  transition: transform 0.35s var(--ease), color 0.35s var(--ease);
+}
+.elsewhere a:hover .elsewhere-arr { color: var(--accent-hi); transform: translate(2px, -2px); }
 
 /* ---------- join / spotify ---------- */
 
@@ -896,6 +1004,16 @@ a { color: inherit; text-decoration: none; }
   .hero-lede { max-width: none; }
   .join { grid-template-columns: 1fr; }
   .pod-grid { grid-template-columns: 1fr; grid-template-areas: "head" "pod" "list"; row-gap: clamp(28px, 6vw, 40px); }
+}
+
+/* Channels: each plate holds a 132px thumbnail beside a two-line title, and two
+   of those side by side squeeze the titles to a word per line below ~940px. So
+   this band stacks a step earlier than the page's other two-column blocks. */
+@media (max-width: 940px) {
+  .chans { grid-template-columns: minmax(0, 1fr); }
+  .elsewhere { grid-template-columns: minmax(0, 1fr); }
+  .elsewhere li + li { border-left: 0; border-top: 1px solid var(--hair); }
+  .elsewhere a { padding-inline: 0; }
 }
 
 @media (max-width: 720px) {

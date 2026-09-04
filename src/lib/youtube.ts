@@ -48,11 +48,18 @@ function decodeXml(value: string): string {
   });
 }
 
+/** "5.0K" reads like a rounding artefact, so a whole thousand loses the ".0". */
+function trimZero(value: string): string {
+  return value.endsWith(".0") ? value.slice(0, -2) : value;
+}
+
 export function formatViews(views: number): string {
   if (!Number.isFinite(views) || views < 0) return "";
-  if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(views >= 10_000_000 ? 0 : 1)}M views`;
+  if (views >= 1_000_000) {
+    return `${trimZero((views / 1_000_000).toFixed(views >= 10_000_000 ? 0 : 1))}M views`;
+  }
   if (views >= 10_000) return `${Math.round(views / 1000)}K views`;
-  if (views >= 1000) return `${(views / 1000).toFixed(1)}K views`;
+  if (views >= 1000) return `${trimZero((views / 1000).toFixed(1))}K views`;
   return `${views} ${views === 1 ? "view" : "views"}`;
 }
 
@@ -67,12 +74,23 @@ export function formatPublished(iso: string): string | null {
   }).format(date);
 }
 
-/** Pull the newest entry out of a channel feed. Pure, so it is unit-tested
-    against a real feed fixture rather than only over the network. */
-export function parseLatestVideo(xml: string): LatestVideo | null {
-  const entry = xml.match(/<entry>([\s\S]*?)<\/entry>/)?.[1];
-  if (!entry) return null;
+/** Pull the newest entries out of a channel feed, newest first. Pure, so it is
+    unit-tested against a real feed fixture rather than only over the network. */
+export function parseVideos(xml: string, limit = 1): LatestVideo[] {
+  const videos: LatestVideo[] = [];
+  for (const match of xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
+    if (videos.length >= limit) break;
+    const video = parseEntry(match[1]);
+    if (video) videos.push(video);
+  }
+  return videos;
+}
 
+export function parseLatestVideo(xml: string): LatestVideo | null {
+  return parseVideos(xml, 1)[0] ?? null;
+}
+
+function parseEntry(entry: string): LatestVideo | null {
   const id = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1]?.trim();
   const rawTitle = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1];
   if (!id || !rawTitle) return null;
@@ -94,18 +112,22 @@ export function parseLatestVideo(xml: string): LatestVideo | null {
 }
 
 /**
- * Fetch the channel's newest upload. Returns null on any failure — the hero
- * falls back to the featured kit rather than rendering an empty column, so a
+ * Fetch a channel's newest uploads, newest first. Returns an empty list on any
+ * failure: every caller renders a fallback rather than an empty hole, so a
  * YouTube outage can never break the homepage.
  */
-export async function fetchLatestVideo(channelId: string): Promise<LatestVideo | null> {
+export async function fetchLatestVideos(channelId: string, limit = 1): Promise<LatestVideo[]> {
   try {
     const res = await fetch(`${FEED_BASE}${encodeURIComponent(channelId)}`, {
       next: { revalidate: LATEST_VIDEO_REVALIDATE_SECONDS },
     });
-    if (!res.ok) return null;
-    return parseLatestVideo(await res.text());
+    if (!res.ok) return [];
+    return parseVideos(await res.text(), limit);
   } catch {
-    return null;
+    return [];
   }
+}
+
+export async function fetchLatestVideo(channelId: string): Promise<LatestVideo | null> {
+  return (await fetchLatestVideos(channelId, 1))[0] ?? null;
 }

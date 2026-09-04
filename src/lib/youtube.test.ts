@@ -2,9 +2,11 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 
 import {
   fetchLatestVideo,
+  fetchLatestVideos,
   formatPublished,
   formatViews,
   parseLatestVideo,
+  parseVideos,
 } from "./youtube";
 
 /** Trimmed copy of a real response from
@@ -84,6 +86,42 @@ describe("parseLatestVideo", () => {
   });
 });
 
+describe("parseVideos", () => {
+  it("returns entries newest first, capped at the limit", () => {
+    const videos = parseVideos(FEED, 2);
+    expect(videos.map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
+  });
+
+  it("stops at the limit even when the feed has more", () => {
+    expect(parseVideos(FEED, 1)).toHaveLength(1);
+  });
+
+  it("asks for more than the feed holds without padding the list", () => {
+    expect(parseVideos(FEED, 10)).toHaveLength(2);
+  });
+
+  it("skips an unparseable entry instead of dropping the rest", () => {
+    const feed = `<feed><entry><title>No id</title></entry>${FEED.slice(FEED.indexOf("<entry>"))}`;
+    expect(parseVideos(feed, 3).map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
+  });
+
+  it("returns an empty list for a feed with no entries", () => {
+    expect(parseVideos("<feed></feed>", 3)).toEqual([]);
+  });
+});
+
+describe("fetchLatestVideos", () => {
+  it("passes the limit through to the parser", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, text: async () => FEED }));
+    expect(await fetchLatestVideos("UC123", 2)).toHaveLength(2);
+  });
+
+  it("returns an empty list on failure, so a plate can still render", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    expect(await fetchLatestVideos("UC123", 3)).toEqual([]);
+  });
+});
+
 describe("formatViews", () => {
   it("keeps small counts exact and singular-aware", () => {
     expect(formatViews(1)).toBe("1 view");
@@ -93,6 +131,8 @@ describe("formatViews", () => {
 
   it("abbreviates thousands and millions", () => {
     expect(formatViews(1500)).toBe("1.5K views");
+    expect(formatViews(5000)).toBe("5K views");
+    expect(formatViews(2_000_000)).toBe("2M views");
     expect(formatViews(12_400)).toBe("12K views");
     expect(formatViews(1_250_000)).toBe("1.3M views");
     expect(formatViews(24_000_000)).toBe("24M views");
