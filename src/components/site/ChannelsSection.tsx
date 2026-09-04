@@ -79,8 +79,11 @@ export async function ChannelsSection() {
                             </span>
                             <span className="chan-vid-text">
                               <span className="chan-vid-title">{video.title}</span>
+                              {/* Date only. View counts are deliberately not
+                                  shown here: the client asked for them off the
+                                  channel rows. The feed still returns them and
+                                  the hero card still uses them. */}
                               <span className="chan-vid-meta">
-                                {video.viewsLabel ? <span>{video.viewsLabel}</span> : null}
                                 {video.publishedLabel ? (
                                   <time dateTime={video.publishedAt ?? undefined}>
                                     {video.publishedLabel}
