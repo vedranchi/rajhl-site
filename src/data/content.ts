@@ -115,6 +115,9 @@ const kitDescriptions: { match: string; meta: string }[] = [
       "300+ SOUNDS INCLUDING 190 DRUM SOUNDS, 20 FREE LOOPS, 35 VOCAL CHOPS, " +
       "10 STARTERS, 35 ONE SHOTS AND 3 MIXER TRACKS",
   },
+  // Must stay after BUNDLE: the bundle's title also contains "LUKARAJHL STASH
+  // KIT", and the first match in this list wins.
+  { match: "LUKARAJHL STASH", meta: "190 drum SOUNDS" },
 ];
 
 export const kits: Kit[] = catalogue.kits.map((k) => {
