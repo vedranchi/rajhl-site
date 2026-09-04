@@ -34,12 +34,9 @@ export type Kit = {
 export type SocialKind = "youtube" | "instagram" | "telegram" | "beatstars";
 
 export type Social = {
+  /** What the destination is *for*, not which platform it is — the two YouTube
+      channels are told apart here, and the icon carries the platform. */
   name: string;
-  /** Purpose chip beside the name. Two YouTube cards would otherwise read as
-      the same destination twice — the chip is what tells them apart. */
-  tag?: string;
-  /** Amber vs magenta readout tint for the chip (CLAUDE.md DS2). */
-  tagTone?: "amber" | "magenta";
   sub: string;
   handle: string;
   url: string;
@@ -97,24 +94,8 @@ export const featuredKit: Kit | undefined =
 
 export const socials: Social[] = [
   { name: "My Beat Store", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
-  {
-    name: "YouTube",
-    tag: "TUTORIALS",
-    tagTone: "amber",
-    sub: "How the beats get made — breakdowns, technique, sound design.",
-    handle: "@lukarajhl",
-    url: youtubeTutorials,
-    icon: "youtube",
-  },
-  {
-    name: "YouTube",
-    tag: "TYPE BEATS",
-    tagTone: "magenta",
-    sub: "Free type beats to rap and sing over. New drops most weeks.",
-    handle: "@rajhlski",
-    url: youtubeTypeBeats,
-    icon: "youtube",
-  },
+  { name: "Tutorials", sub: "YouTube · breakdowns, technique, sound design", handle: "@lukarajhl", url: youtubeTutorials, icon: "youtube" },
+  { name: "Type Beats", sub: "YouTube · free beats, new drops most weeks", handle: "@rajhlski", url: youtubeTypeBeats, icon: "youtube" },
   { name: "Instagram", sub: "Studio & snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
   { name: "Telegram", sub: "Free loops & early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];

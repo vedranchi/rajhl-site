@@ -32,12 +32,7 @@ export function ChannelsSection() {
                   <SocialIcon kind={s.icon} />
                 </span>
                 <span className="channel-body">
-                  <span className="channel-name">
-                    {s.name}
-                    {s.tag ? (
-                      <span className={`channel-tag channel-tag--${s.tagTone ?? "amber"}`}>{s.tag}</span>
-                    ) : null}
-                  </span>
+                  <span className="channel-name">{s.name}</span>
                   <span className="channel-sub">{s.sub}</span>
                   <span className="channel-handle">{s.handle}</span>
                 </span>
