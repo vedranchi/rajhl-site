@@ -21,9 +21,7 @@ export function KitsSection() {
       <Reveal>
         <div className="sec-head">
           <h2 className="sec-title">Sound Kits</h2>
-          <p className="sec-note">
-            Instant download after checkout. The same sounds used across the catalogue.
-          </p>
+          <p className="sec-note">All the sounds I use daily to create my beats</p>
         </div>
       </Reveal>
 
