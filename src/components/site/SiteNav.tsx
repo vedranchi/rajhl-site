@@ -13,11 +13,13 @@ import { ScrollLink } from "./ScrollLink";
  * band just under the bar, rather than from raw scroll offsets, so it stays
  * correct at any section height and on any viewport.
  */
+/** `short` is what the phone bar shows: four full labels plus the wordmark do
+    not fit under about 500px, and shortening beats scrolling or wrapping. */
 const ITEMS = [
-  { id: "channels", label: "Channels" },
-  { id: "top10", label: "My beats" },
-  { id: "join", label: "Telegram" },
-  { id: "spotify", label: "Playlist" },
+  { id: "channels", label: "Channels", short: "Channels" },
+  { id: "top10", label: "My beats", short: "Beats" },
+  { id: "join", label: "Private Telegram", short: "Telegram" },
+  { id: "spotify", label: "Produced by me", short: "Playlist" },
 ] as const;
 
 export function SiteNav() {
@@ -69,7 +71,8 @@ export function SiteNav() {
                 targetId={item.id}
                 aria-current={active === item.id ? "true" : undefined}
               >
-                {item.label}
+                <span className="nav-label-full">{item.label}</span>
+                <span className="nav-label-short">{item.short}</span>
               </ScrollLink>
             </li>
           ))}
