@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Reveal } from "./Reveal";
 import { requestInvite, type InviteResult } from "@/app/actions/request-invite";
-import { telegramInvite } from "@/data/content";
+import { telegramPublic } from "@/data/content";
 
 /**
  * The Private Telegram request form. The page's signature section: a
@@ -65,11 +65,15 @@ export function InnerCircle() {
           {succeeded ? (
             <div className="circle-form form-success" role="status" tabIndex={-1} ref={successRef}>
               <p className="fs-title">Request received</p>
+              {/* No invite link here. Handing the private group's link to
+                  everyone who submits the form would make the application
+                  pointless; the link goes out once Luka has approved someone. */}
               <p className="fs-body">
-                You&apos;re on the list for the private Telegram group.
+                Luka goes through these by hand. If it&apos;s a fit, you&apos;ll get the invite.
+                The free loops channel is open to everyone in the meantime.
               </p>
-              <a className="btn primary" href={telegramInvite} target="_blank" rel="noopener noreferrer">
-                Open Telegram ↗
+              <a className="btn" href={telegramPublic} target="_blank" rel="noopener noreferrer">
+                Free loops channel ↗
               </a>
             </div>
           ) : (

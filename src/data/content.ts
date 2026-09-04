@@ -94,6 +94,12 @@ export const youtubeChannels: YoutubeChannel[] = [
   },
 ];
 
+/** Two different rooms, and they must not be confused. `telegramPublic` is the
+    open "lukarajhl vault" channel anyone can join, and it is the one the
+    Channels strip links to. `telegramInvite` is the private group's invite
+    link: it is what applicants are given once Luka has approved them, so it
+    must never be printed on a public page. */
+export const telegramPublic = "https://t.me/lukarajhl";
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
 
 /** Real BeatStars catalogue (top-10 snapshot — see scripts/fetch-beatstars.mjs). */
@@ -148,7 +154,7 @@ export const featuredKit: Kit | undefined =
 export const socials: Social[] = [
   { name: "Beat Store", sub: "Leases and exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
   { name: "Instagram", sub: "lyfe", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
-  { name: "Telegram", sub: "Free loops", handle: "Private group", url: telegramInvite, icon: "telegram" },
+  { name: "Telegram", sub: "Free loops", handle: "@lukarajhl", url: telegramPublic, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */
@@ -156,7 +162,7 @@ export const channelBadges: { label: string; url: string }[] = [
   { label: "TUTORIALS ►", url: `${youtubeTutorials}?sub_confirmation=1` },
   { label: "TYPE BEATS ►", url: `${youtubeTypeBeats}?sub_confirmation=1` },
   { label: "FOLLOW ★", url: "https://www.instagram.com/luka.rajhl/" },
-  { label: "JOIN ✈", url: telegramInvite },
+  { label: "JOIN ✈", url: telegramPublic },
   { label: "BEATSTARS ♪", url: beatstarsStore },
 ];
 
