@@ -324,12 +324,6 @@ a { color: inherit; text-decoration: none; }
 }
 .hero-vid-play svg { width: 20px; height: 20px; margin-left: 1px; }
 .hero-vid:hover .hero-vid-play { background: rgba(95, 83, 151, 0.92); transform: scale(1.06); }
-/* Play count as an LED-style readout, taking the slot the kit price held. */
-.hero-vid-plays {
-  font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.02em;
-  color: var(--amber);
-}
-
 
 /* Section transition (SectionCue): the page's one piece of ambient motion. */
 .cue {

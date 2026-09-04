@@ -38,8 +38,9 @@ export function HeroVideo({ video }: { video: LatestVideo }) {
           </>
         ) : null}
       </span>
+      {/* No view count: the client asked for view counts off the site. The
+          feed still returns one, it is simply not rendered. */}
       <span className="hero-kit-foot">
-        <span className="hero-vid-plays">{video.viewsLabel ?? "New upload"}</span>
         <span className="hero-kit-go">Watch on YouTube ↗</span>
       </span>
     </a>
