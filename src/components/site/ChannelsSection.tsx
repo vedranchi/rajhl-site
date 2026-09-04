@@ -33,10 +33,6 @@ export async function ChannelsSection() {
         <Reveal>
           <div className="sec-head">
             <h2 className="sec-title">Channels</h2>
-            <p className="sec-note">
-              Two YouTube channels doing two different jobs. One shows how the beats get made.
-              The other is where the free beats land.
-            </p>
           </div>
         </Reveal>
 

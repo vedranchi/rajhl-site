@@ -77,7 +77,7 @@ export const youtubeChannels: YoutubeChannel[] = [
   {
     key: "tutorials",
     name: "Tutorials",
-    blurb: "How the beats get made. Breakdowns, sound design and technique, in full.",
+    blurb: "How I make the beats, song breakdowns and producer tips",
     handle: "@lukarajhl",
     channelId: youtubeTutorialsChannelId,
     url: youtubeTutorials,
