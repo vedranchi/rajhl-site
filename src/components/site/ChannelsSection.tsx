@@ -10,9 +10,10 @@ import { fetchLatestVideos } from "@/lib/youtube";
 const PER_CHANNEL = 3;
 
 /**
- * Prominent band, a step below the Inner Circle in the page's hierarchy: its
- * own full-bleed plate, left-aligned on a flat surface, where the Inner Circle
- * is centred on a lit one. Ranking stays Inner Circle > Channels > Beats.
+ * Prominent band, a step below the Private Telegram panel in the page's
+ * hierarchy: its own full-bleed plate, left-aligned on a flat surface, where
+ * that panel is centred on a lit one. Ranking stays Telegram > Channels >
+ * Beats.
  *
  * The section's subject is the two YouTube channels, so they take the weight:
  * one plate each, carrying that channel's real uploads straight from its feed.

@@ -16,7 +16,7 @@ import { ScrollLink } from "./ScrollLink";
 const ITEMS = [
   { id: "channels", label: "Channels" },
   { id: "top10", label: "My beats" },
-  { id: "join", label: "The Circle" },
+  { id: "join", label: "Telegram" },
   { id: "spotify", label: "Playlist" },
 ] as const;
 

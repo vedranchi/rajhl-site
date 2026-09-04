@@ -6,8 +6,8 @@ import { requestInvite, type InviteResult } from "@/app/actions/request-invite";
 import { telegramInvite } from "@/data/content";
 
 /**
- * The page's signature section: a full-bleed, vignetted panel that breaks the
- * rhythm of the sections above it. Weight comes from space, contrast and a
+ * The Private Telegram request form. The page's signature section: a
+ * full-bleed, vignetted panel that breaks the rhythm of the sections above it. Weight comes from space, contrast and a
  * narrow measure — not from badges, counters or louder colour.
  *
  * Form behaviour is unchanged: `useActionState`, controlled inputs so values
@@ -52,7 +52,7 @@ export function InnerCircle() {
     <section className="circle" id="join">
       <div className="shell circle-inner">
         <Reveal>
-          <h2 className="circle-title">The Inner Circle</h2>
+          <h2 className="circle-title">Private Telegram</h2>
           <p className="circle-lede">
             I&apos;m only adding the best producers. When I need loops / beats for the artists I
             work with, this is who I go to first — plus more loops than the public channel and
@@ -66,14 +66,14 @@ export function InnerCircle() {
             <div className="circle-form form-success" role="status" tabIndex={-1} ref={successRef}>
               <p className="fs-title">Request received</p>
               <p className="fs-body">
-                You&apos;re on the list. Jump into the room while you wait.
+                You&apos;re on the list for the private Telegram group.
               </p>
               <a className="btn primary" href={telegramInvite} target="_blank" rel="noopener noreferrer">
                 Open Telegram ↗
               </a>
             </div>
           ) : (
-            <form className="circle-form" action={formAction} aria-label="Request an invite" aria-busy={isPending}>
+            <form className="circle-form" action={formAction} aria-label="Request to join the private Telegram group" aria-busy={isPending}>
               <div className="field">
                 <label htmlFor="inv-user">Telegram username</label>
                 <input
@@ -118,7 +118,7 @@ export function InnerCircle() {
               ) : null}
 
               <button type="submit" className="btn primary circle-submit" disabled={isPending} aria-busy={isPending}>
-                {isPending ? "Sending…" : "Request an invite"}
+                {isPending ? "Sending…" : "Request to join"}
               </button>
               <p className="form-fine">Invites go out by email. No spam, unsubscribe anytime.</p>
             </form>
