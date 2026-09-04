@@ -47,13 +47,13 @@ export async function ChannelsSection() {
               <Reveal key={channel.key} delay={i * 90} className="chan-slot">
                 <article className="chan">
                   <header className="chan-head">
-                    <span className="chan-ico">
-                      <SocialIcon kind="youtube" />
-                    </span>
-                    <span className="chan-id">
-                      <h3 className="chan-name">{channel.name}</h3>
-                      <span className="chan-handle">{channel.handle}</span>
-                    </span>
+                    <h3 className="chan-name">{channel.name}</h3>
+                    <p className="chan-handle">
+                      <span className="chan-mark" aria-hidden="true">
+                        <SocialIcon kind="youtube" />
+                      </span>
+                      {channel.handle}
+                    </p>
                   </header>
 
                   <p className="chan-blurb">{channel.blurb}</p>
@@ -76,18 +76,11 @@ export async function ChannelsSection() {
                                 loading="lazy"
                                 decoding="async"
                               />
-                              <span className="chan-play" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M8 5.5v13l11-6.5z" />
-                                </svg>
-                              </span>
                             </span>
                             <span className="chan-vid-text">
                               <span className="chan-vid-title">{video.title}</span>
                               <span className="chan-vid-meta">
-                                {video.viewsLabel ? (
-                                  <span className="chan-plays">{video.viewsLabel}</span>
-                                ) : null}
+                                {video.viewsLabel ? <span>{video.viewsLabel}</span> : null}
                                 {video.publishedLabel ? (
                                   <time dateTime={video.publishedAt ?? undefined}>
                                     {video.publishedLabel}
