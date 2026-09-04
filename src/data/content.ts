@@ -131,6 +131,13 @@ export const catalogueShown = catalogue.shown;
 export const hasMoreBeats = catalogueTotals.beats > catalogueShown.beats;
 export const hasMoreKits = catalogueTotals.kits > catalogueShown.kits;
 
+/** The kit featured beside the Sound Kits list: the bundle, which is the most
+    sounds for the money and the widest piece of artwork in the section. The
+    rest of the kits fill the ruled list next to it. */
+export const bundleKit: Kit | undefined =
+  kits.find((k) => k.file.toUpperCase().includes("BUNDLE")) ?? kits[0];
+export const listedKits: Kit[] = kits.filter((k) => k !== bundleKit);
+
 /** Newest kit, featured beside the hero title. Matched by name so a catalogue
     refresh can't drop it; falls back to the first kit if it ever disappears. */
 export const featuredKit: Kit | undefined =

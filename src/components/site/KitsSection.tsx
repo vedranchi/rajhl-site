@@ -1,6 +1,6 @@
 import { Reveal } from "./Reveal";
 import { BeatStarsIcon } from "./icons";
-import { kits, beatstarsStore, hasMoreKits } from "@/data/content";
+import { bundleKit, listedKits, beatstarsStore, hasMoreKits } from "@/data/content";
 
 /**
  * Ruled list, the same shape the Top 10 and the channel columns use: a row per
@@ -10,6 +10,10 @@ import { kits, beatstarsStore, hasMoreKits } from "@/data/content";
  *
  * This replaced a horizontal rail of gradient cards. The rail hid four of five
  * kits off the right edge and the cards fought the artwork they framed.
+ *
+ * The bundle sits beside the list at full size, the way the Top 10 puts the
+ * device beside its rows: it is the most sounds for the money, and it gives
+ * the section a piece of artwork big enough to anchor it.
  */
 export function KitsSection() {
   return (
@@ -23,9 +27,10 @@ export function KitsSection() {
         </div>
       </Reveal>
 
-      <Reveal delay={100}>
+      <div className="kits-grid">
+      <Reveal delay={100} className="kits-list-wrap">
         <ul className="kits">
-          {kits.map((k) => (
+          {listedKits.map((k) => (
             <li key={k.file}>
               <a className="kit-row" href={k.buyUrl} target="_blank" rel="noopener noreferrer">
                 <span className="kit-art">
@@ -49,6 +54,41 @@ export function KitsSection() {
           ))}
         </ul>
       </Reveal>
+
+      {bundleKit ? (
+        <Reveal delay={160} className="kit-feature-wrap">
+          <article className="kit-feature">
+            <a
+              className="kit-feature-art"
+              href={bundleKit.buyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${bundleKit.file} on BeatStars`}
+            >
+              {bundleKit.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={bundleKit.image} alt="" width={400} height={400} loading="lazy" decoding="async" />
+              ) : (
+                <BeatStarsIcon aria-hidden="true" />
+              )}
+            </a>
+            <h3 className="kit-feature-name">{bundleKit.file}</h3>
+            <p className="kit-feature-meta">{bundleKit.meta}</p>
+            <div className="kit-feature-foot">
+              <span className="kit-price">{bundleKit.price}</span>
+              <a
+                className="btn primary"
+                href={bundleKit.buyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get the bundle
+              </a>
+            </div>
+          </article>
+        </Reveal>
+      ) : null}
+      </div>
 
       {hasMoreKits ? (
         <Reveal delay={140}>

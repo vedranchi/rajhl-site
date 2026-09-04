@@ -419,7 +419,18 @@ a { color: inherit; text-decoration: none; }
 /* Same ruled list as the Top 10 and the channel columns: a row per kit, a
    hairline between, one white tint on hover. Capped rather than full-bleed so
    the rows stay the width the other two lists read at. */
-.kits { list-style: none; margin: 0; padding: 0; max-width: 48rem; }
+/* List on the left, the bundle beside it, the same way the Top 10 puts its
+   rows next to the device. Without it the list left a third of the section
+   empty. */
+.kits-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(272px, 31%, 372px);
+  gap: clamp(28px, 4vw, 60px);
+  align-items: start;
+}
+.kits-list-wrap { min-width: 0; }
+
+.kits { list-style: none; margin: 0; padding: 0; }
 .kits li + li { border-top: 1px solid var(--hair); }
 .kit-row {
   display: grid;
@@ -457,6 +468,36 @@ a { color: inherit; text-decoration: none; }
 .kit-price {
   font-family: var(--display); font-size: 1.2rem; color: var(--amber);
   font-variant-numeric: tabular-nums;
+}
+
+/* Featured bundle. No plate and no gradient: the cover is the object, the
+   copy sits under it, same as the hero's video card. */
+.kit-feature-wrap { min-width: 0; }
+.kit-feature-art {
+  display: grid; place-items: center;
+  aspect-ratio: 1 / 1; overflow: hidden;
+  border-radius: var(--r-sm); border: 1px solid var(--hair);
+  background: var(--bg-2); color: var(--accent-hi);
+}
+.kit-feature-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.5s var(--ease);
+}
+.kit-feature-art:hover img { transform: scale(1.03); }
+.kit-feature-art svg { width: 44px; height: 44px; opacity: 0.5; }
+.kit-feature-name {
+  margin: 16px 0 0; font-size: 0.92rem; font-weight: inherit; line-height: 1.4;
+  color: var(--text);
+}
+.kit-feature-meta {
+  margin: 9px 0 0; font-size: 0.72rem; line-height: 1.65; color: var(--faint);
+  /* Three lines: the bundle's contents list runs to six otherwise. */
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kit-feature-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-top: 18px;
 }
 
 .kits-foot { margin-top: clamp(24px, 3vw, 34px); }
@@ -969,6 +1010,11 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 900px) {
+  /* Kits stack: the bundle drops under the list, capped so it does not become
+     a full-width slab of artwork on a phone. */
+  .kits-grid { grid-template-columns: minmax(0, 1fr); gap: clamp(30px, 6vw, 44px); }
+  .kit-feature { max-width: 24rem; }
+
   /* Hero stacks: the featured kit drops under the lede, capped so it stays a
      footnote to the title rather than a second hero. */
   .hero { grid-template-columns: minmax(0, 1fr); align-items: start; }
