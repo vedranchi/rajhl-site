@@ -80,10 +80,8 @@ export function IpodSection() {
       <div className="shell pod-grid">
         <Reveal className="pod-head-wrap">
           <div className="sec-head pod-head">
-            <h2 className="sec-title pod-title">On rotation</h2>
-            <p className="sec-note pod-note">
-              The ten most-played beats, ranked by BeatStars. Use the wheel.
-            </p>
+            <h2 className="sec-title pod-title">Most popular beats</h2>
+            <p className="sec-note pod-note">My top 10 beats, ranked by BeatStars.</p>
           </div>
         </Reveal>
 

@@ -86,7 +86,7 @@ export const youtubeChannels: YoutubeChannel[] = [
   {
     key: "type-beats",
     name: "Type Beats",
-    blurb: "Free beats to write and record over. New ones most weeks.",
+    blurb: "All my beats in one place. Upload every other day.",
     handle: "@rajhlski",
     channelId: youtubeTypeBeatsChannelId,
     url: youtubeTypeBeats,
@@ -147,8 +147,8 @@ export const featuredKit: Kit | undefined =
     in here: they are the section's subject, not one of its footnotes. */
 export const socials: Social[] = [
   { name: "Beat Store", sub: "Leases and exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
-  { name: "Instagram", sub: "Studio and snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
-  { name: "Telegram", sub: "Free loops and early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
+  { name: "Instagram", sub: "lyfe", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
+  { name: "Telegram", sub: "Free loops", handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */
