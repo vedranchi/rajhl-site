@@ -51,6 +51,9 @@ export const beatstarsStore = catalogue.store;
     The type-beat channel is addressed by channel ID, stable even if its
     @rajhlski vanity handle changes. */
 export const youtubeTutorials = "https://www.youtube.com/@lukarajhl";
+/** Same channel as `youtubeTutorials`, by ID — the Atom feed the hero's latest
+    video comes from is only addressable by channel ID, not by @handle. */
+export const youtubeTutorialsChannelId = "UCMcvYZ58vysUkGQbBfalkxQ";
 export const youtubeTypeBeats = "https://www.youtube.com/channel/UCU6-wec8KCUzF-qfDaq37oA";
 
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";

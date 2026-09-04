@@ -1,8 +1,14 @@
 import { Reveal } from "./Reveal";
 import { ScrollLink } from "./ScrollLink";
-import { beatstarsStore, featuredKit } from "@/data/content";
+import { HeroVideo } from "./HeroVideo";
+import { beatstarsStore, featuredKit, youtubeTutorialsChannelId } from "@/data/content";
+import { fetchLatestVideo } from "@/lib/youtube";
 
-export function Hero() {
+export async function Hero() {
+  // Live from the tutorials channel's feed, revalidated hourly. Null on any
+  // failure, which is why the featured kit stays as the fallback below.
+  const video = await fetchLatestVideo(youtubeTutorialsChannelId);
+
   return (
     <header className="hero shell">
       <div className="hero-lede">
@@ -32,9 +38,13 @@ export function Hero() {
         </Reveal>
       </div>
 
-      {/* Latest kit, sitting in the hero's empty right column rather than as a
-          standalone card: no plate, just a hairline rule and the artwork. */}
-      {featuredKit ? (
+      {/* Right column: the newest tutorial, falling back to the featured kit if
+          YouTube is unreachable so the column is never empty. */}
+      {video ? (
+        <Reveal delay={320} className="hero-feature">
+          <HeroVideo video={video} />
+        </Reveal>
+      ) : featuredKit ? (
         <Reveal delay={320} className="hero-feature">
           <a
             className="hero-kit"
