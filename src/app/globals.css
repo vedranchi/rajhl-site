@@ -129,6 +129,7 @@ a { color: inherit; text-decoration: none; }
   transition: color 0.3s var(--ease);
 }
 .nav-mark:hover { color: var(--accent-hi); }
+.nav-mark-short { display: none; }
 
 .nav-list {
   display: flex; align-items: center; gap: clamp(14px, 2.4vw, 30px);
@@ -159,12 +160,24 @@ a { color: inherit; text-decoration: none; }
 /* Fixed bar must not sit on top of a heading when a link jumps to it. */
 .section, .band, .podwrap, .circle { scroll-margin-top: var(--nav-h); }
 
+/* Phone bar: shorter, tighter, and it keeps a way home. The wordmark used to
+   be hidden here, which left the bar with no route back to the top; it becomes
+   initials instead, which costs about 20px. */
 @media (max-width: 560px) {
-  :root { --nav-h: 60px; }
-  .nav-mark { display: none; }
-  .nav-inner { justify-content: center; }
-  .nav-list { gap: clamp(12px, 4.5vw, 22px); }
-  .nav-link { font-size: 0.7rem; letter-spacing: 0.06em; }
+  :root { --nav-h: 52px; }
+  .nav-mark { font-size: 1.05rem; }
+  .nav-mark-full { display: none; }
+  .nav-mark-short { display: inline; }
+  .nav-inner { gap: 12px; }
+  .nav-list { min-width: 0; gap: clamp(11px, 3.4vw, 18px); }
+  .nav-link { font-size: 0.68rem; letter-spacing: 0.04em; padding-inline: 0; }
+}
+
+/* Narrowest phones: the four labels plus the mark only fit once the tracking
+   comes off. Shrinking the type further would put the bar under 10px. */
+@media (max-width: 400px) {
+  .nav-list { gap: 10px; }
+  .nav-link { font-size: 0.66rem; letter-spacing: 0.01em; }
 }
 
 /* ---------- layout primitives ---------- */

@@ -52,8 +52,13 @@ export function SiteNav() {
   return (
     <nav className="nav" aria-label="Sections">
       <div className="nav-inner">
-        <ScrollLink className="nav-mark" targetId="top">
-          Luka Rajhl
+        {/* Home. A real link to "/" so it works from anywhere, upgraded to a
+            scroll to the top of the page when already here. The name shortens
+            to initials on a phone rather than disappearing, which used to
+            leave the mobile bar with no way back to the top. */}
+        <ScrollLink className="nav-mark" targetId="top" href="/" aria-label="Luka Rajhl, home">
+          <span className="nav-mark-full">Luka Rajhl</span>
+          <span className="nav-mark-short">LR</span>
         </ScrollLink>
 
         <ul className="nav-list">
