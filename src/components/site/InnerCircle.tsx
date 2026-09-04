@@ -54,9 +54,11 @@ export function InnerCircle() {
         <Reveal>
           <h2 className="circle-title">The Inner Circle</h2>
           <p className="circle-lede">
-            A private Telegram room where beats go out before the store sees them, plus loops,
-            stems and prices that never make the public page.
+            I&apos;m only adding the best producers. When I need loops / beats for the artists I
+            work with, this is who I go to first — plus more loops than the public channel and
+            free sounds along the way.
           </p>
+          <p className="circle-apply">Drop your IG and send 3 solo tracks to apply.</p>
         </Reveal>
 
         <Reveal delay={140}>
