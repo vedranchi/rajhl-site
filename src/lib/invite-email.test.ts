@@ -74,7 +74,7 @@ describe("sendInviteEmail", () => {
   });
 
   it("falls back to the current time when createdAt is absent", async () => {
-    const res = await sendInviteEmail({ username: "@x", email: "y@z.com" });
+    const res = await sendInviteEmail({ instagram: "@x" });
     expect(res).toEqual({ ok: true });
     expect(sendMock.mock.calls[0][0].text).toContain("IP Address\n----------\nunavailable");
   });
