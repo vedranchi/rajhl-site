@@ -20,42 +20,42 @@ function run(data: Record<string, unknown> | undefined, operation = "create") {
 }
 
 describe("inviteBeforeValidate", () => {
-  it("normalises username to a canonical @handle and lowercases the email", () => {
-    const out = run({ username: "Luka", email: "Fan@Example.COM" });
-    expect(out).toMatchObject({ username: "@Luka", email: "fan@example.com" });
+  it("normalises the handle to a canonical lowercased @handle", () => {
+    const out = run({ instagram: "Luka.Rajhl" });
+    expect(out).toMatchObject({ instagram: "@luka.rajhl" });
   });
 
-  it("keeps an already-@-prefixed username single-@", () => {
-    const out = run({ username: "@luka", email: "a@b.co" });
-    expect(out?.username).toBe("@luka");
+  it("keeps an already-@-prefixed handle single-@", () => {
+    const out = run({ instagram: "@luka" });
+    expect(out?.instagram).toBe("@luka");
   });
 
-  it("throws the validator message on a bad username", () => {
-    expect(() => run({ username: "ab", email: "a@b.co" })).toThrow(/3–32 characters/);
+  it("throws the validator message on a bad handle", () => {
+    expect(() => run({ instagram: "no spaces allowed" })).toThrow(/Instagram username/);
   });
 
-  it("throws the validator message on a bad email", () => {
-    expect(() => run({ username: "luka", email: "not-an-email" })).toThrow(/doesn't look valid/);
+  it("throws on a handle that is only an @", () => {
+    expect(() => run({ instagram: "@" })).toThrow(/required/);
   });
 
-  it("skips identity validation on a partial update that omits username/email", () => {
+  it("skips identity validation on a partial update that omits the handle", () => {
     const out = run({ status: "emailed", emailSentAt: "2026-07-12T10:00:00.000Z" });
     expect(out).toMatchObject({ status: "emailed" });
-    expect(out?.username).toBeUndefined();
+    expect(out?.instagram).toBeUndefined();
   });
 
   it("caps an over-long user agent at 500 chars", () => {
-    const out = run({ username: "luka", email: "a@b.co", userAgent: "x".repeat(900) });
+    const out = run({ instagram: "luka", userAgent: "x".repeat(900) });
     expect((out?.userAgent as string).length).toBe(500);
   });
 
   it("defaults source to invite-form when absent", () => {
-    const out = run({ username: "luka", email: "a@b.co" });
+    const out = run({ instagram: "luka" });
     expect(out?.source).toBe("invite-form");
   });
 
   it("leaves an explicit source untouched", () => {
-    const out = run({ username: "luka", email: "a@b.co", source: "second-cta" });
+    const out = run({ instagram: "luka", source: "second-cta" });
     expect(out?.source).toBe("second-cta");
   });
 
@@ -80,35 +80,35 @@ describe("inviteBeforeChange (dedupe)", () => {
   });
 
   it("does not query or change anything on a non-create operation", async () => {
-    const { arg, count } = changeArg({ email: "a@b.co", status: "new" }, "update", 1);
+    const { arg, count } = changeArg({ instagram: "@luka", status: "new" }, "update", 1);
     const out = await inviteBeforeChange(arg);
     expect(count).not.toHaveBeenCalled();
     expect(out?.status).toBe("new");
   });
 
   it("leaves status untouched when no prior lead exists in the window", async () => {
-    const { arg } = changeArg({ email: "a@b.co", status: "new" }, "create", 0);
+    const { arg } = changeArg({ instagram: "@luka", status: "new" }, "create", 0);
     const out = await inviteBeforeChange(arg);
     expect(out?.status).toBe("new");
   });
 
-  it("marks status=duplicate when a prior same-email lead exists", async () => {
-    const { arg, count } = changeArg({ email: "a@b.co", status: "new" }, "create", 1);
+  it("marks status=duplicate when a prior same-handle lead exists", async () => {
+    const { arg, count } = changeArg({ instagram: "@luka", status: "new" }, "create", 1);
     const out = await inviteBeforeChange(arg);
     expect(out?.status).toBe("duplicate");
     const where = count.mock.calls[0][0].where;
-    expect(where.email).toEqual({ equals: "a@b.co" });
+    expect(where.instagram).toEqual({ equals: "@luka" });
     expect(where.createdAt.greater_than).toBeTypeOf("string");
   });
 
   it("skips the check (no query) for an already-spam row", async () => {
-    const { arg, count } = changeArg({ email: "a@b.co", status: "spam" }, "create", 1);
+    const { arg, count } = changeArg({ instagram: "@luka", status: "spam" }, "create", 1);
     const out = await inviteBeforeChange(arg);
     expect(count).not.toHaveBeenCalled();
     expect(out?.status).toBe("spam");
   });
 
-  it("skips when email is missing", async () => {
+  it("skips when the handle is missing", async () => {
     const { arg, count } = changeArg({ status: "new" }, "create", 1);
     const out = await inviteBeforeChange(arg);
     expect(count).not.toHaveBeenCalled();
@@ -117,7 +117,7 @@ describe("inviteBeforeChange (dedupe)", () => {
 
   it("honours INVITE_DEDUPE_WINDOW_MS for the lookback window", async () => {
     process.env = { ...OLD_ENV, INVITE_DEDUPE_WINDOW_MS: "1000" };
-    const { arg, count } = changeArg({ email: "a@b.co", status: "new" }, "create", 0);
+    const { arg, count } = changeArg({ instagram: "@luka", status: "new" }, "create", 0);
     const before = Date.now();
     await inviteBeforeChange(arg);
     const since = new Date(count.mock.calls[0][0].where.createdAt.greater_than).getTime();
@@ -139,7 +139,7 @@ function afterArg(
   return { arg, update };
 }
 
-const lead = { id: 7, username: "@luka", email: "fan@example.com", status: "new", createdAt: "x" };
+const lead = { id: 7, instagram: "@luka", status: "new", createdAt: "x" };
 
 describe("inviteAfterChange (email + lifecycle)", () => {
   beforeEach(() => {
@@ -180,7 +180,7 @@ describe("inviteAfterChange (email + lifecycle)", () => {
     await inviteAfterChange(arg);
 
     expect(sendMock).toHaveBeenCalledTimes(1);
-    expect(sendMock.mock.calls[0][0]).toMatchObject({ email: "fan@example.com" });
+    expect(sendMock.mock.calls[0][0]).toMatchObject({ instagram: "@luka" });
 
     const opts = update.mock.calls[0][0];
     expect(opts.id).toBe(7);

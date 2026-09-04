@@ -19,7 +19,7 @@ import { envInt } from "@/lib/env";
 /** Match the action's cap so a stored user-agent can never balloon a row. */
 const USER_AGENT_MAX = 500;
 
-/** How far back a same-email lead counts as a duplicate (default 24h, env-tunable). */
+/** How far back a same-handle lead counts as a duplicate (default 24h, env-tunable). */
 const DEFAULT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1_000;
 function dedupeWindowMs(): number {
   return envInt(process.env.INVITE_DEDUPE_WINDOW_MS, DEFAULT_DEDUPE_WINDOW_MS);
@@ -29,7 +29,7 @@ function dedupeWindowMs(): number {
  * beforeValidate — canonicalise + defend (defense in depth). The action already
  * validates, but this guarantees no malformed lead can ever land, even from a
  * future admin/import/Local-API path. Re-runs the pure validator, normalises to
- * a canonical `@handle` + lowercased email, caps the user-agent, defaults source.
+ * a canonical lowercased `@handle`, caps the user-agent, defaults source.
  */
 export const inviteBeforeValidate: CollectionBeforeValidateHook<InviteRequest> = ({
   data,
@@ -37,15 +37,13 @@ export const inviteBeforeValidate: CollectionBeforeValidateHook<InviteRequest> =
 }) => {
   if (!data) return data;
 
-  // Only validate the identity fields when both are present. Partial updates
-  // (e.g. the afterChange status write in a later step) legitimately omit them —
-  // skip rather than reject. Creates always carry both, so no malformed lead
-  // can land.
-  if (typeof data.username === "string" && typeof data.email === "string") {
-    const result = validateInvite(data.username, data.email);
+  // Only validate the handle when it is present. Partial updates (e.g. the
+  // afterChange status write) legitimately omit it — skip rather than reject.
+  // Creates always carry it, so no malformed lead can land.
+  if (typeof data.instagram === "string") {
+    const result = validateInvite(data.instagram);
     if (!result.ok) throw new Error(result.error);
-    data.username = result.username; // canonical @handle
-    data.email = result.email; // lowercased
+    data.instagram = result.instagram; // canonical lowercased @handle
   }
 
   if (typeof data.userAgent === "string" && data.userAgent.length > USER_AGENT_MAX) {
@@ -61,7 +59,7 @@ export const inviteBeforeValidate: CollectionBeforeValidateHook<InviteRequest> =
 
 /**
  * beforeChange — duplicate detection (create only). Looks up a prior lead with
- * the same email inside the dedupe window; if found, marks this row
+ * the same Instagram handle inside the dedupe window; if found, marks this row
  * `status: "duplicate"` so the afterChange email hook (later step) can skip the
  * owner notification. The row is still stored — repeat interest stays visible
  * in admin. Does not reject. See §3.6.
@@ -72,7 +70,7 @@ export const inviteBeforeChange: CollectionBeforeChangeHook<InviteRequest> = asy
   operation,
 }) => {
   if (operation !== "create") return data;
-  if (typeof data.email !== "string" || !data.email) return data;
+  if (typeof data.instagram !== "string" || !data.instagram) return data;
   // Don't clobber a stronger, explicitly-set terminal status.
   if (data.status === "spam") return data;
 
@@ -80,7 +78,7 @@ export const inviteBeforeChange: CollectionBeforeChangeHook<InviteRequest> = asy
   const { totalDocs } = await req.payload.count({
     collection: "invite-requests",
     where: {
-      email: { equals: data.email },
+      instagram: { equals: data.instagram },
       createdAt: { greater_than: since },
     },
     req, // share the current transaction; the not-yet-written row can't self-match

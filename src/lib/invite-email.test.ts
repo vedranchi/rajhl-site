@@ -26,8 +26,7 @@ afterEach(() => {
 });
 
 const doc = {
-  username: "@luka",
-  email: "fan@example.com",
+  instagram: "@luka",
   ip: "203.0.113.5",
   createdAt: "2026-07-12T10:00:00.000Z",
 };
@@ -40,10 +39,11 @@ describe("sendInviteEmail", () => {
     expect(sendMock).toHaveBeenCalledTimes(1);
     const payload = sendMock.mock.calls[0][0];
     expect(payload.to).toBe("owner@example.com");
-    expect(payload.replyTo).toBe("fan@example.com");
-    expect(payload.from).toBe("Inner Circle <onboarding@resend.dev>"); // fallback
-    expect(payload.subject).toBe("@luka would like to join your Inner Circle");
-    expect(payload.text).toContain("fan@example.com");
+    // No applicant email is collected, so there is nothing to reply to.
+    expect(payload.replyTo).toBeUndefined();
+    expect(payload.from).toBe("Private Telegram <onboarding@resend.dev>"); // fallback
+    expect(payload.subject).toBe("@luka would like to join your private Telegram group");
+    expect(payload.text).toContain("@luka");
     expect(payload.text).toContain("203.0.113.5");
     expect(payload.text).toContain("2026-07-12T10:00:00.000Z");
   });

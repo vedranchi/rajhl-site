@@ -6,7 +6,7 @@ import { getPayloadClient } from "@/lib/payload";
 import { envInt } from "@/lib/env";
 
 /**
- * Server action for the private-group invite form.
+ * Server action for the Private Telegram request form.
  *
  * Flow: honeypot + time-gate (silent drop) → validation → durable IP rate
  * limit (Postgres, via the invite-requests collection) → persist the lead. CSRF
@@ -47,9 +47,9 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
     }
   }
 
-  const validated = validateInvite(formData.get("username"), formData.get("email"));
+  const validated = validateInvite(formData.get("instagram"));
   if (!validated.ok) return { ok: false, error: validated.error };
-  const { username, email } = validated;
+  const { instagram } = validated;
 
   const hdrs = await headers();
   // Prefer x-real-ip: on Vercel it's the edge-set true client IP. The leftmost
@@ -85,8 +85,7 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
       collection: "invite-requests",
       draft: false,
       data: {
-        username,
-        email,
+        instagram,
         status: "new", // hooks refine this → duplicate / emailed / email_failed
         source: "invite-form",
         ...(ip ? { ip } : {}),
@@ -103,7 +102,7 @@ export async function requestInvite(formData: FormData): Promise<InviteResult> {
   // Distinct copy from a transport failure, so the visitor gets a useful nudge.
   if (!process.env.RESEND_API_KEY || !process.env.INVITE_NOTIFY_TO) {
     console.error("requestInvite: RESEND_API_KEY / INVITE_NOTIFY_TO not configured");
-    return { ok: false, error: "Invite requests are temporarily unavailable — DM on Instagram instead." };
+    return { ok: false, error: "Requests are temporarily unavailable — DM on Instagram instead." };
   }
 
   return { ok: true };

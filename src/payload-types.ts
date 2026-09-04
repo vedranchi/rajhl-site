@@ -144,15 +144,25 @@ export interface User {
   collection: 'users';
 }
 /**
- * Inbound private-group invite requests. Read-only leads; edit status/notes only.
+ * Inbound Private Telegram requests. Read-only leads; edit status/notes only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "invite-requests".
  */
 export interface InviteRequest {
   id: number;
-  username: string;
-  email: string;
+  /**
+   * Applicant's Instagram handle. Reply here with the group invite.
+   */
+  instagram?: string | null;
+  /**
+   * Legacy field from the old invite form.
+   */
+  username?: string | null;
+  /**
+   * Legacy field from the old invite form.
+   */
+  email?: string | null;
   /**
    * Lifecycle, set automatically. Filter by 'Email failed' to find leads whose owner notification didn't send; mark 'Spam' to flag abuse.
    */
@@ -272,6 +282,7 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "invite-requests_select".
  */
 export interface InviteRequestsSelect<T extends boolean = true> {
+  instagram?: T;
   username?: T;
   email?: T;
   status?: T;

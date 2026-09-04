@@ -15,8 +15,7 @@ import { telegramPublic } from "@/data/content";
  * `company` + the `elapsedMs` time-gate).
  */
 export function InnerCircle() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [instagram, setInstagram] = useState("");
 
   // Mount time for the backend time-gate, kept in a ref (Date.now() in render
   // trips react-hooks/purity). The reducer sends the *elapsed* fill time, so a
@@ -79,31 +78,21 @@ export function InnerCircle() {
           ) : (
             <form className="circle-form" action={formAction} aria-label="Request to join the private Telegram group" aria-busy={isPending}>
               <div className="field">
-                <label htmlFor="inv-user">Telegram username</label>
+                <label htmlFor="inv-ig">Instagram username</label>
                 <input
-                  id="inv-user"
-                  name="username"
+                  id="inv-ig"
+                  name="instagram"
                   type="text"
+                  inputMode="text"
                   placeholder="@yourhandle"
                   autoComplete="off"
-                  maxLength={33}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  readOnly={isPending}
-                  required
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="inv-mail">Email</label>
-                <input
-                  id="inv-mail"
-                  name="email"
-                  type="email"
-                  placeholder="you@email.com"
-                  autoComplete="off"
-                  maxLength={254}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  /* 30 handle characters, a leading @, and enough room to paste
+                     a profile URL, which the validator reduces to the handle. */
+                  maxLength={80}
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
                   readOnly={isPending}
                   required
                 />
@@ -124,7 +113,9 @@ export function InnerCircle() {
               <button type="submit" className="btn primary circle-submit" disabled={isPending} aria-busy={isPending}>
                 {isPending ? "Sending…" : "Request to join"}
               </button>
-              <p className="form-fine">Invites go out by email. No spam, unsubscribe anytime.</p>
+              <p className="form-fine">
+                Luka replies on Instagram. No email needed, no list, no spam.
+              </p>
             </form>
           )}
         </Reveal>
