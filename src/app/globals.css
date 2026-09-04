@@ -346,30 +346,45 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- buttons ---------- */
 
+/* Buttons follow the Top 10 device rather than the web's default CTA pill: the
+   same small radius as the rest of the small surfaces, a hairline edge, a 1px
+   top highlight for the bevel, and a real push on :active. No pill shape, no
+   gradient fill, no glow. */
 .btn {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 13px 26px; border-radius: 999px;
-  font: inherit; font-size: 0.76rem; letter-spacing: 0.14em; text-transform: uppercase;
-  border: 1px solid var(--hair-2); background: transparent; color: var(--text);
-  cursor: pointer; position: relative; overflow: hidden;
-  transition: border-color 0.35s var(--ease), color 0.35s var(--ease), transform 0.35s var(--ease), background 0.35s var(--ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  /* min-height keeps a 44px touch target while the padding stays tight. */
+  min-height: 44px;
+  padding: 12px 22px; border-radius: var(--r-sm);
+  font: inherit; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+  border: 1px solid var(--hair-2); background: var(--surface-2); color: var(--text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), color 0.25s var(--ease),
+    background 0.25s var(--ease), box-shadow 0.25s var(--ease), transform 0.1s var(--ease);
 }
-.btn:hover { transform: translateY(-2px); border-color: var(--accent); background: rgba(95, 83, 151, 0.09); }
-.btn:active { transform: translateY(0); }
+.btn:hover { border-color: var(--accent); color: var(--accent-hi); background: #FFFFFF; }
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(30, 24, 56, 0.18) inset;
+}
 
 .btn.primary {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
-  color: #FBFAFD;
-  box-shadow: 0 6px 18px -12px rgba(10, 8, 16, 0.9);
+  border-color: var(--accent-deep);
+  background: var(--accent);
+  color: #F6F4FB;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.22) inset;
 }
-.btn.primary:hover { background: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent-hi) 100%); box-shadow: 0 8px 22px -12px rgba(10, 8, 16, 0.95); }
+.btn.primary:hover { background: var(--accent-hi); color: #FFFFFF; }
+.btn.primary:active { box-shadow: 0 1px 4px rgba(10, 8, 16, 0.45) inset; }
+
+/* Text link beside a button. Same casing and tracking, no box, so the pair
+   reads as one primary action and one quiet alternative. */
 .quietlink {
   align-self: center;
   font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
   padding: 13px 4px;
   border-bottom: 1px solid transparent;
-  transition: color 0.35s var(--ease), border-color 0.35s var(--ease);
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease);
 }
 .quietlink:hover { color: var(--accent-hi); border-bottom-color: var(--hair-2); }
 
