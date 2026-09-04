@@ -35,6 +35,11 @@ export type SocialKind = "youtube" | "instagram" | "telegram" | "beatstars";
 
 export type Social = {
   name: string;
+  /** Purpose chip beside the name. Two YouTube cards would otherwise read as
+      the same destination twice — the chip is what tells them apart. */
+  tag?: string;
+  /** Amber vs magenta readout tint for the chip (CLAUDE.md DS2). */
+  tagTone?: "amber" | "magenta";
   sub: string;
   handle: string;
   url: string;
@@ -42,10 +47,14 @@ export type Social = {
 };
 /** BeatStars store root + private Telegram group. */
 export const beatstarsStore = catalogue.store;
-/** The two YouTube channels. The second is addressed by channel ID — stable even if
-    its @rajhlski vanity handle changes. */
-export const youtubeMain = "https://www.youtube.com/@lukarajhl";
-export const youtubeSecond = "https://www.youtube.com/channel/UCU6-wec8KCUzF-qfDaq37oA";
+/** The two YouTube channels, which serve different purposes: `youtubeTutorials`
+    ("Luka Rajhl", UCMcvYZ58vysUkGQbBfalkxQ) publishes production breakdowns and
+    how-tos; `youtubeTypeBeats` ("lukarajhl", @rajhlski) publishes free type
+    beats. Verified against both channels' upload feeds — don't swap them.
+    The type-beat channel is addressed by channel ID, stable even if its
+    @rajhlski vanity handle changes. */
+export const youtubeTutorials = "https://www.youtube.com/@lukarajhl";
+export const youtubeTypeBeats = "https://www.youtube.com/channel/UCU6-wec8KCUzF-qfDaq37oA";
 
 export const telegramInvite = "https://t.me/+nfPjj9ktvsYwMWVk";
 
@@ -88,16 +97,32 @@ export const featuredKit: Kit | undefined =
 
 export const socials: Social[] = [
   { name: "My Beat Store", sub: "Beats, leases & exclusives", handle: "beatstars.com/rajhl", url: beatstarsStore, icon: "beatstars" },
-  { name: "YouTube", sub: "Type beats & breakdowns", handle: "@lukarajhl", url: youtubeMain, icon: "youtube" },
-  { name: "YouTube", sub: "Second channel", handle: "@rajhlski", url: youtubeSecond, icon: "youtube" },
+  {
+    name: "YouTube",
+    tag: "TUTORIALS",
+    tagTone: "amber",
+    sub: "How the beats get made — breakdowns, technique, sound design.",
+    handle: "@lukarajhl",
+    url: youtubeTutorials,
+    icon: "youtube",
+  },
+  {
+    name: "YouTube",
+    tag: "TYPE BEATS",
+    tagTone: "magenta",
+    sub: "Free type beats to rap and sing over. New drops most weeks.",
+    handle: "@rajhlski",
+    url: youtubeTypeBeats,
+    icon: "youtube",
+  },
   { name: "Instagram", sub: "Studio & snippets", handle: "@luka.rajhl", url: "https://www.instagram.com/luka.rajhl/", icon: "instagram" },
   { name: "Telegram", sub: "Free loops & early demos", handle: "Private group", url: telegramInvite, icon: "telegram" },
 ];
 
 /** The four Channels-tab badges (subscribe / follow / join / store). */
 export const channelBadges: { label: string; url: string }[] = [
-  { label: "SUBSCRIBE ►", url: `${youtubeMain}?sub_confirmation=1` },
-  { label: "SUBSCRIBE 2 ►", url: `${youtubeSecond}?sub_confirmation=1` },
+  { label: "TUTORIALS ►", url: `${youtubeTutorials}?sub_confirmation=1` },
+  { label: "TYPE BEATS ►", url: `${youtubeTypeBeats}?sub_confirmation=1` },
   { label: "FOLLOW ★", url: "https://www.instagram.com/luka.rajhl/" },
   { label: "JOIN ✈", url: telegramInvite },
   { label: "BEATSTARS ♪", url: beatstarsStore },

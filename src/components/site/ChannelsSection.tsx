@@ -18,7 +18,8 @@ export function ChannelsSection() {
               <h2 className="sec-title">Channels</h2>
             </div>
             <p className="sec-note">
-              Two YouTube channels, studio snippets on Instagram, and free loops on Telegram.
+              Two YouTube channels — one for tutorials, one for free type beats — plus studio
+              snippets on Instagram and free loops on Telegram.
             </p>
           </div>
         </Reveal>
@@ -31,7 +32,12 @@ export function ChannelsSection() {
                   <SocialIcon kind={s.icon} />
                 </span>
                 <span className="channel-body">
-                  <span className="channel-name">{s.name}</span>
+                  <span className="channel-name">
+                    {s.name}
+                    {s.tag ? (
+                      <span className={`channel-tag channel-tag--${s.tagTone ?? "amber"}`}>{s.tag}</span>
+                    ) : null}
+                  </span>
                   <span className="channel-sub">{s.sub}</span>
                   <span className="channel-handle">{s.handle}</span>
                 </span>
