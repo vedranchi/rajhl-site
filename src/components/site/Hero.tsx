@@ -14,14 +14,6 @@ export async function Hero() {
       <div className="hero-lede">
         <Reveal>
           <h1 className="hero-name">LUKA RAJHL</h1>
-          <p className="hero-sub">Trap, ambient and lo-fi</p>
-        </Reveal>
-
-        <Reveal delay={120}>
-          <p className="hero-bio">
-            Dust-warm 808s, cinematic keys and hard-swinging drums. Beats and kits ship worldwide
-            through BeatStars, from bedroom demos to placements.
-          </p>
         </Reveal>
 
         {/* One primary action. The store lives in the beat-store card further down,

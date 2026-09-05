@@ -15,10 +15,8 @@ const display = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Luka Rajhl - Beat Producer",
-  description:
-    "Dust-warm 808s, cinematic keys and hard-swinging drums from Skopje. Lease beats and download kits on BeatStars.",
-};
+  title: "Luka Rajhl - Beat Producer"
+}
 
 export default function RootLayout({
   children,
