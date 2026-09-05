@@ -24,6 +24,7 @@ const MEMBER_ID = "MR1947497"; // Luka Rajhl (beatstars.com/rajhl)
 const ALGOLIA_APP = "NMMGZJQ6QI";
 const ALGOLIA_KEY = "b3513eb709fe8f444b4d5c191b63ea47"; // public search key, from BeatStars' own web bundle
 const REFERER = "https://www.beatstars.com/";
+const STORE = "https://www.beatstars.com/rajhl"; // the artist's public store root
 const MAX_ITEMS = 10; // publish at most this many beats / kits; link out for the rest
 
 // Sanity gates. The refresh workflow auto-merges this file to `main` and
@@ -37,6 +38,29 @@ const MAX_SHRINK = 0.2; // refuse a >20% drop in total beats vs the committed sn
 
 const j = (r) => r.json();
 const money = (n) => `$${Number(n).toFixed(0)}`;
+/** Keeps cents when the price actually has them (29.99 stays 29.99, 25 stays 25). */
+const priceExact = (n) => {
+  const v = Number(n);
+  return `$${Number.isInteger(v) ? v : v.toFixed(2)}`;
+};
+
+/**
+ * License descriptor from the Algolia hit. BeatStars exposes the lease price
+ * plus free / exclusive flags; there is no licence-tier list on the public
+ * index, so this reports what is actually knowable rather than inventing tiers.
+ */
+function licenseOf(h) {
+  const md = h.metadata ?? {};
+  if (h.freeDownload || md.free) return { label: "Free download", price: null };
+  const price = h.price ?? md.price ?? null;
+  if (md.exclusive) {
+    return { label: "Exclusive only", price: price != null ? priceExact(price) : null };
+  }
+  return {
+    label: price != null ? `Lease from ${priceExact(price)}` : "Lease available",
+    price: price != null ? priceExact(price) : null,
+  };
+}
 const secs = (s) => {
   if (!s || Number.isNaN(+s)) return "";
   const m = Math.floor(s / 60);
@@ -140,11 +164,16 @@ async function main() {
   for (const [i, h] of topBeats.entries()) {
     const id = numericId(h);
     const d = await detail("track", id);
+    // Cover art, same CDN renditions as the kits (see below). `medium` is
+    // 400x400 webp, which suits both the beat list and the iPod screen.
+    const bart = h.artwork?.sizes ?? {};
     beats.push({
       n: i === 0 ? "▶" : String(i + 1).padStart(2, "0"),
       title: h.title,
       time: d.duration ?? secs(d.length),
       plays: plays(h),
+      image: bart.medium ?? bart.large ?? bart.small ?? null,
+      license: licenseOf(h),
       buyUrl: d.beatstars_uri ?? `https://www.beatstars.com/beat/${d.title_uri}`,
       // Stable redirect endpoint → fresh signed S3 mp3 on each play (never expires).
       // Same client-side preview exception as topBeat below — lets the transport's
@@ -160,24 +189,38 @@ async function main() {
     ? {
         title: topBeatEntry.title,
         artist: "Luka Rajhl",
+        image: topBeatEntry.image,
         stream: topBeatEntry.stream,
         total: topBeatEntry.time,
         buyUrl: topBeatEntry.buyUrl,
       }
     : null;
 
-  // --- Kits: rank by plays too, keep up to MAX_ITEMS, canonical /sound-kits/ URL ---
+  // --- Kits: rank by plays too, keep up to MAX_ITEMS, handle-scoped kit URL ---
   const { hits: kitHits, nbHits: kitsTotal } = await algoliaAll("public_prod_inventory_soundkit_index");
   const topKits = [...kitHits].sort((a, b) => plays(b) - plays(a)).slice(0, MAX_ITEMS);
   const kits = [];
   for (const h of topKits) {
     const d = await detail("soundkit", numericId(h));
     const desc = blurb(d.description);
+    // Artwork: the Algolia hit carries pre-resized CDN renditions. `medium`
+    // (400x400 webp) is the right weight for the card. Baked in here so the
+    // rendered page still makes no catalogue *fetch* to BeatStars — the image
+    // loads as plain media, like the audio stream (CLAUDE.md P2).
+    const art = h.artwork?.sizes ?? {};
+    const image = art.medium ?? art.large ?? art.small ?? null;
     kits.push({
       file: h.title,
-      meta: desc ? `${desc} · royalty-free` : "Sound kit · royalty-free",
+      meta: desc || "Sound kit",
       price: money(h.price ?? d.price ?? 0),
-      buyUrl: d.relative_uri ? `https://www.beatstars.com${d.relative_uri}` : `https://www.beatstars.com/sound-kits/${d.title_uri}`,
+      image,
+      // Must be scoped to the artist handle. `relative_uri` alone
+      // (www.beatstars.com/sound-kits/<slug>) is not a route in BeatStars' app:
+      // it falls through to the generic Sound Kits browse page. The handle-scoped
+      // form is what their own `share_uri` short link resolves to. `propage_uri`
+      // (rajhl.beatstars.com) is NOT usable — it 302s to /private-pro-page, the
+      // same trap as the bsta.rs/k/<id> short link (CLAUDE.md P3).
+      buyUrl: `${STORE}${d.relative_uri ?? `/sound-kits/${d.title_uri}`}`,
     });
   }
 
@@ -190,7 +233,7 @@ async function main() {
     _generatedAt: new Date().toISOString(),
     _source: "BeatStars public Algolia index + v2 read API (see scripts/fetch-beatstars.mjs)",
     _popularityMetric: "activities.play (BeatStars play count)",
-    store: "https://www.beatstars.com/rajhl",
+    store: STORE,
     totals: { beats: beatsTotal, kits: kitsTotal },
     shown: { beats: beats.length, kits: kits.length },
     topBeat,

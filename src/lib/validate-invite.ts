@@ -1,45 +1,43 @@
 /**
- * Pure validation for the private-group invite form (no framework imports so it
- * can be unit-tested standalone). Rules per docs/handoffs/private-group-invite-task-1.md:
- * Telegram-style username, RFC-lite email, hard length caps, trim everything.
+ * Pure validation for the Private Telegram request form (no framework imports,
+ * so it can be unit-tested standalone).
+ *
+ * The form collects one contact detail: an Instagram handle. Luka replies there
+ * with the group invite, so a wrong handle means an unreachable applicant, but
+ * an over-strict rule means a rejected one. The rules below follow Instagram's
+ * own: 1-30 characters of letters, digits, periods and underscores, not
+ * starting or ending with a period. A pasted profile URL is accepted and
+ * reduced to the handle, because people paste those.
  */
 
 export type InviteValidation =
-  | { ok: true; username: string; email: string }
+  | { ok: true; instagram: string }
   | { ok: false; error: string };
 
-// Telegram usernames are a-z, 0-9, underscore. Telegram enforces 5–32; we allow
-// 3–32 to be lenient with people typing display names, and accept a leading @.
-const USERNAME_RE = /^@?[a-zA-Z0-9_]{3,32}$/;
+const HANDLE_RE = /^[A-Za-z0-9._]{1,30}$/;
+const PROFILE_URL_RE = /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/([^/?#]+)/i;
 
-// RFC-lite: something@something.tld, no whitespace, sane lengths.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const EMAIL_MAX = 254;
+const INVALID =
+  "That doesn't look like an Instagram username. Letters, numbers, periods and underscores, up to 30 characters.";
 
-export function validateInvite(usernameRaw: unknown, emailRaw: unknown): InviteValidation {
-  if (typeof usernameRaw !== "string" || typeof emailRaw !== "string") {
-    return { ok: false, error: "Username and email are required." };
+/** "https://instagram.com/luka.rajhl/" and "@luka.rajhl" both reduce to "luka.rajhl". */
+function toHandle(raw: string): string {
+  const trimmed = raw.trim();
+  const fromUrl = trimmed.match(PROFILE_URL_RE)?.[1];
+  return (fromUrl ?? trimmed).replace(/^@/, "").replace(/\/+$/, "").trim();
+}
+
+export function validateInvite(instagramRaw: unknown): InviteValidation {
+  if (typeof instagramRaw !== "string") {
+    return { ok: false, error: "Your Instagram username is required." };
   }
 
-  const usernameTrimmed = usernameRaw.trim();
-  const email = emailRaw.trim().toLowerCase();
+  const handle = toHandle(instagramRaw);
+  if (!handle) return { ok: false, error: "Your Instagram username is required." };
+  if (!HANDLE_RE.test(handle)) return { ok: false, error: INVALID };
+  if (handle.startsWith(".") || handle.endsWith(".")) return { ok: false, error: INVALID };
 
-  if (!usernameTrimmed) return { ok: false, error: "Username is required." };
-  if (!email) return { ok: false, error: "Email is required." };
-
-  if (!USERNAME_RE.test(usernameTrimmed)) {
-    return {
-      ok: false,
-      error: "Username must be 3–32 characters — letters, numbers or underscores (a leading @ is fine).",
-    };
-  }
-
-  if (email.length > EMAIL_MAX || !EMAIL_RE.test(email)) {
-    return { ok: false, error: "That email address doesn't look valid." };
-  }
-
-  // Normalise to a single canonical @handle for the notification email.
-  const username = `@${usernameTrimmed.replace(/^@/, "")}`;
-
-  return { ok: true, username, email };
+  // Canonical @handle, lowercased: Instagram handles are case-insensitive, and
+  // the duplicate check compares this value.
+  return { ok: true, instagram: `@${handle.toLowerCase()}` };
 }

@@ -133,8 +133,12 @@ pnpm · ESLint (no Prettier) · Vitest (no e2e). `src/`, alias `@/*`. Layout: `a
   `memberId:MR1947497`, **`Referer: https://www.beatstars.com/` required**, **100 hits/page
   max → paginate**) plus the v2 read API (`…/track?id=`, `…/soundkit?id=`) for canonical
   URLs. Popularity = `activities.play`. Top 10 beats + up to 10 kits are baked; a
-  "Browse all N" CTA links out for the rest. Kit short-links (`bsta.rs/k/<id>/`) redirect to
-  a **private** page — use the v2 `relative_uri` (`/sound-kits/<slug>`).
+  "Browse all N" CTA links out for the rest. **Kit URLs must be handle-scoped**:
+  `https://www.beatstars.com/rajhl` + the v2 `relative_uri`. Bare
+  `beatstars.com/sound-kits/<slug>` is not a route in their app and silently falls through
+  to the generic Sound Kits browse page; `propage_uri` (`rajhl.beatstars.com/…`) and the
+  `bsta.rs/k/<id>/` short link both 302 to a **private** page. Beats are different — their
+  `beatstars_uri` (`/beat/<slug>`) is already the canonical public URL.
 - **P4** Those endpoints are undocumented and can change without notice. Verify before
   relying on any detail in P3, and never present it to the user as guaranteed-current. The
   fetch script enforces sanity gates for exactly this reason: it refuses to write an empty

@@ -9,7 +9,7 @@ import {
 const adminOnly = ({ req: { user } }: { req: { user: unknown } }) => Boolean(user);
 
 /**
- * InviteRequests — leads from the private-group ("Inner Circle") invite form.
+ * InviteRequests — leads from the Private Telegram request form.
  * The public never writes here directly: `create` is closed and the vetted
  * server action (`requestInvite`) uses the Payload Local API, which bypasses
  * access control by design. See docs/plans/private-group-invite-payload-plan.md.
@@ -19,10 +19,12 @@ export const InviteRequests: CollectionConfig = {
   labels: { singular: "Invite Request", plural: "Invite Requests" },
   admin: {
     group: "Leads",
-    useAsTitle: "username",
-    defaultColumns: ["username", "email", "status", "createdAt"],
-    listSearchableFields: ["username", "email"],
-    description: "Inbound private-group invite requests. Read-only leads; edit status/notes only.",
+    useAsTitle: "instagram",
+    defaultColumns: ["instagram", "status", "createdAt"],
+    // `tracks` deliberately absent from defaultColumns: an array column renders
+    // as a count, which tells a reviewer nothing. Open the row for the links.
+    listSearchableFields: ["instagram", "username", "email"],
+    description: "Inbound Private Telegram requests. Read-only leads; edit status/notes only.",
     pagination: { defaultLimit: 25 },
   },
   access: {
@@ -41,17 +43,48 @@ export const InviteRequests: CollectionConfig = {
   },
   fields: [
     {
+      name: "instagram",
+      type: "text",
+      // Not `required` at the schema level on purpose: the table already holds
+      // leads from the old email form, and a NOT NULL column cannot be added to
+      // them without inventing data. The server action and the collection's
+      // beforeValidate hook both reject a create without a valid handle, so
+      // nothing malformed can land.
+      index: true,
+      admin: { readOnly: true, description: "Applicant's Instagram handle. Reply here with the group invite." },
+    },
+    {
       name: "username",
       type: "text",
-      required: true,
-      admin: { readOnly: true },
+      // Legacy: the Telegram handle the old form collected. Kept so the leads
+      // already in the table keep their contact details; nothing writes it now.
+      admin: { readOnly: true, description: "Legacy field from the old invite form." },
     },
     {
       name: "email",
       type: "email",
-      required: true,
+      // Legacy, as above. The form no longer asks applicants for an email.
       index: true,
-      admin: { readOnly: true },
+      admin: { readOnly: true, description: "Legacy field from the old invite form." },
+    },
+    {
+      name: "tracks",
+      type: "array",
+      // The applicant's three best solo beats, stored in a private Supabase
+      // bucket. Only the path is authoritative; `url` is a long-lived signed
+      // link so the beats are playable straight from this row, which is what
+      // makes a request reviewable in one place. Both are written by the server
+      // action, never by a form post.
+      admin: {
+        readOnly: true,
+        description: "The three solo beats attached to this request.",
+      },
+      fields: [
+        { name: "path", type: "text", required: true },
+        { name: "originalName", type: "text" },
+        { name: "sizeBytes", type: "number" },
+        { name: "url", type: "text", admin: { description: "Signed link, valid for a year." } },
+      ],
     },
     {
       name: "status",

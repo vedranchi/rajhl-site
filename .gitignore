@@ -47,3 +47,7 @@ HANDOFF*.md
 docs/handoffs/
 docs/
 docs
+
+# agent tooling — machine-local, not part of the site (CLAUDE.md DS7)
+.agents/
+skills-lock.json
