@@ -9,6 +9,7 @@ import {
   prepareUploads,
   signDownloadUrl,
   statObject,
+  uploadsAreFlooded,
   validateTrackInputs,
   verifyClaim,
   type PreparedUploads,
@@ -62,13 +63,37 @@ async function overRateLimit(ip: string): Promise<boolean> {
   return totalDocs >= RATE_LIMIT;
 }
 
+/** Silent-drop signals shared by both steps. A bot that skips the form and
+    calls the action directly trips the same wires as one that fills it in. */
+function looksAutomated(honeypot: unknown, elapsedRaw: unknown): boolean {
+  if (typeof honeypot === "string" && honeypot.trim() !== "") return true;
+  if (typeof elapsedRaw === "string" && elapsedRaw.trim() !== "") {
+    const parsed = Number(elapsedRaw);
+    if (Number.isFinite(parsed) && parsed >= 0 && parsed < MIN_FILL_MS) return true;
+  }
+  return false;
+}
+
 /**
  * Step 1 of the upload flow: validate what the browser claims about the three
  * files, then hand back one signed Supabase URL per track plus a claim binding
  * those exact object paths. The browser uploads directly; nothing large ever
  * passes through this action.
+ *
+ * Guarded as heavily as the submit step, because it is the step that spends
+ * storage. The per-IP limit counts request rows, so on its own it cannot see
+ * someone who mints URLs and never submits; `uploadsAreFlooded` is the backstop
+ * that caps the damage globally.
  */
-export async function prepareTrackUploads(files: unknown): Promise<PrepareResult> {
+export async function prepareTrackUploads(
+  files: unknown,
+  guard?: { company?: unknown; elapsedMs?: unknown },
+): Promise<PrepareResult> {
+  // Pretend it worked, but hand back nothing usable: a bot gets no upload URL.
+  if (looksAutomated(guard?.company, guard?.elapsedMs)) {
+    return { ok: false, error: "Uploads are temporarily unavailable." };
+  }
+
   const validated = validateTrackInputs(files);
   if (!validated.ok) return { ok: false, error: validated.error };
 
@@ -77,27 +102,26 @@ export async function prepareTrackUploads(files: unknown): Promise<PrepareResult
     return { ok: false, error: "Too many requests from your connection — try again in an hour." };
   }
 
+  if (await uploadsAreFlooded()) {
+    console.error("prepareTrackUploads: hourly upload ceiling reached");
+    return { ok: false, error: "Too many uploads right now — try again in an hour." };
+  }
+
   return prepareUploads(validated.files);
 }
 
 export async function requestInvite(formData: FormData): Promise<InviteResult> {
-  // Honeypot: humans never see/fill this field. Pretend success so bots move on.
-  const honeypot = formData.get("company");
-  if (typeof honeypot === "string" && honeypot.trim() !== "") return { ok: true };
-
-  // Time-gate: the form reports how long it was on screen before submit,
-  // measured entirely on the client clock (a client *timestamp* compared with
-  // the server clock would silently drop visitors with skewed device clocks).
-  // Only enforced when present, so direct POSTs without the field still work.
-  // Sub-3s fills are bots — silent drop.
+  // Honeypot + time-gate. Humans never fill the hidden field, and a sub-3s fill
+  // is a script; both get a fake success so bots move on. The time-gate is only
+  // enforced when the field is present, so a direct POST without it still works
+  // rather than silently dropping a visitor with a skewed device clock.
   const elapsedRaw = formData.get("elapsedMs");
+  if (looksAutomated(formData.get("company"), elapsedRaw)) return { ok: true };
+
   let elapsedMs: number | undefined;
   if (typeof elapsedRaw === "string" && elapsedRaw.trim() !== "") {
     const parsed = Number(elapsedRaw);
-    if (Number.isFinite(parsed) && parsed >= 0) {
-      if (parsed < MIN_FILL_MS) return { ok: true };
-      elapsedMs = parsed;
-    }
+    if (Number.isFinite(parsed) && parsed >= 0) elapsedMs = parsed;
   }
 
   const validated = validateInvite(formData.get("instagram"));

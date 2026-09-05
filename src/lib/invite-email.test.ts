@@ -53,7 +53,8 @@ describe("sendInviteEmail", () => {
     expect(payload.text).toContain("night drive.mp3");
     expect(payload.text).toContain("https://storage.test/1?token=a");
     expect(payload.text).toContain("https://storage.test/3?token=c");
-    expect(payload.text).toContain("203.0.113.5");
+    // the applicant's IP is kept on the row, never emailed
+    expect(payload.text).not.toContain("203.0.113.5");
     expect(payload.text).toContain("2026-07-12T10:00:00.000Z");
   });
 
@@ -98,6 +99,6 @@ describe("sendInviteEmail", () => {
   it("falls back to the current time when createdAt is absent", async () => {
     const res = await sendInviteEmail({ instagram: "@x" });
     expect(res).toEqual({ ok: true });
-    expect(sendMock.mock.calls[0][0].text).toContain("IP Address\n----------\nunavailable");
+    expect(sendMock.mock.calls[0][0].text).not.toContain("IP Address");
   });
 });

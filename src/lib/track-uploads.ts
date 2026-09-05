@@ -203,6 +203,70 @@ export async function signDownloadUrl(path: string, expiresIn = DOWNLOAD_URL_TTL
   return signedURL ? `${store.url}/storage/v1${signedURL}` : null;
 }
 
+/**
+ * How many objects may be created bucket-wide in an hour. The per-IP limit
+ * counts *request rows*, so it cannot see someone who mints upload URLs and
+ * never submits: their row count stays zero forever. This is the backstop, and
+ * being global it also holds against a flood spread across many IPs.
+ *
+ * 60 = twenty complete applications an hour, far above anything real.
+ */
+const MAX_UPLOADS_PER_HOUR = 60;
+
+/** Counts objects created in the last hour, newest month first. Cheap in
+    practice: retention keeps the bucket small and applications are rare. */
+export async function recentUploadCount(): Promise<number> {
+  const store = storage();
+  if (!store) return 0;
+
+  const now = new Date();
+  const months = [
+    `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`,
+    // An upload just after midnight on the 1st still has to see yesterday.
+    `${new Date(now.getTime() - 86_400_000).getUTCFullYear()}-${String(
+      new Date(now.getTime() - 86_400_000).getUTCMonth() + 1,
+    ).padStart(2, "0")}`,
+  ];
+
+  const since = Date.now() - 60 * 60 * 1_000;
+  let count = 0;
+
+  for (const month of new Set(months)) {
+    // One level down from requests/<month> is a folder per submission; listing
+    // with that prefix returns every object beneath it.
+    const res = await fetch(`${store.url}/storage/v1/object/list/${bucket()}`, {
+      method: "POST",
+      headers: { ...authHeaders(store.key), "Content-Type": "application/json" },
+      body: JSON.stringify({ prefix: `requests/${month}`, limit: 1000 }),
+    });
+    if (!res.ok) continue;
+
+    const rows = (await res.json()) as { created_at?: string; id?: string | null }[];
+    for (const row of rows) {
+      // Folders come back with a null id and no useful timestamp; recurse once.
+      if (row.id === null) {
+        const sub = await fetch(`${store.url}/storage/v1/object/list/${bucket()}`, {
+          method: "POST",
+          headers: { ...authHeaders(store.key), "Content-Type": "application/json" },
+          body: JSON.stringify({ prefix: `requests/${month}/${(row as { name?: string }).name}`, limit: 1000 }),
+        });
+        if (!sub.ok) continue;
+        for (const o of (await sub.json()) as { created_at?: string }[]) {
+          if (o.created_at && new Date(o.created_at).getTime() >= since) count += 1;
+        }
+      } else if (row.created_at && new Date(row.created_at).getTime() >= since) {
+        count += 1;
+      }
+    }
+  }
+  return count;
+}
+
+/** True when the bucket has taken too many objects in the last hour. */
+export async function uploadsAreFlooded(): Promise<boolean> {
+  return (await recentUploadCount()) >= MAX_UPLOADS_PER_HOUR;
+}
+
 /** Used by the cleanup path and by scripts/purge-invite-tracks.mjs. */
 export async function deleteObjects(paths: string[]): Promise<boolean> {
   const store = storage();

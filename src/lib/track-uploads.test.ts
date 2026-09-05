@@ -7,7 +7,9 @@ import {
   deleteObjects,
   prepareUploads,
   signDownloadUrl,
+  recentUploadCount,
   statObject,
+  uploadsAreFlooded,
   validateTrackInputs,
   verifyClaim,
 } from "./track-uploads";
@@ -210,5 +212,48 @@ describe("signDownloadUrl / deleteObjects", () => {
     expect(await deleteObjects(["a.mp3", "b.mp3"])).toBe(true);
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ prefixes: ["a.mp3", "b.mp3"] });
     expect(await deleteObjects([])).toBe(false);
+  });
+});
+
+describe("recentUploadCount / uploadsAreFlooded", () => {
+  const iso = (minutesAgo: number) => new Date(Date.now() - minutesAgo * 60_000).toISOString();
+
+  /** list returns folders (id:null) at the month prefix, files one level down. */
+  function mockBucket(files: { created_at: string }[]) {
+    return vi.fn().mockImplementation((_url: string, init: { body: string }) => {
+      const { prefix } = JSON.parse(init.body);
+      const isMonth = /^requests\/\d{4}-\d{2}$/.test(prefix);
+      return Promise.resolve({
+        ok: true,
+        json: async () => (isMonth ? [{ name: "folder", id: null }] : files),
+      });
+    });
+  }
+
+  it("counts only objects from the last hour, ignoring older ones", async () => {
+    vi.stubGlobal("fetch", mockBucket([{ created_at: iso(10) }, { created_at: iso(30) }, { created_at: iso(240) }]));
+    // Two of the three are inside the window. Mid-month both lookback prefixes
+    // are the same month and collapse to one walk; on the 1st they differ.
+    expect(await recentUploadCount()).toBe(2);
+  });
+
+  it("does not flood-block a normal trickle of applications", async () => {
+    vi.stubGlobal("fetch", mockBucket([{ created_at: iso(5) }, { created_at: iso(6) }, { created_at: iso(7) }]));
+    expect(await uploadsAreFlooded()).toBe(false);
+  });
+
+  it("blocks once the hourly ceiling is reached", async () => {
+    vi.stubGlobal("fetch", mockBucket(Array.from({ length: 60 }, () => ({ created_at: iso(5) }))));
+    expect(await uploadsAreFlooded()).toBe(true);
+  });
+
+  it("fails open rather than blocking real applicants when storage errors", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }));
+    expect(await uploadsAreFlooded()).toBe(false);
+  });
+
+  it("counts nothing when storage is unconfigured", async () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    expect(await recentUploadCount()).toBe(0);
   });
 });

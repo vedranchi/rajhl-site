@@ -59,6 +59,9 @@ export function InnerCircle() {
       try {
         const prepared = await prepareTrackUploads(
           picked.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          // Same honeypot and fill-time signals the submit step checks: minting
+          // upload URLs is the step that spends storage, so it is guarded too.
+          { company: formData.get("company"), elapsedMs: formData.get("elapsedMs") },
         );
         if (!prepared.ok) return { ok: false, error: prepared.error };
 
