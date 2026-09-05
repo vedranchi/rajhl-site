@@ -1125,14 +1125,18 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 720px) {
-  :root { --dock-h: 74px; }
-  /* Transport controls are the page's most-tapped thing; 38px is under the
-     44px target, and there is room in the dock for the bigger circles. */
-  .dock-btn { width: 44px; height: 44px; }
-  .dock-btn.main { width: 48px; height: 48px; }
+  /* No transport dock on a phone: the iPod already carries play/pause, skip,
+     the scrubber and the track list, so a second fixed transport was a bar's
+     worth of screen spent repeating controls that are already on screen.
+     Hiding it also releases the body padding that reserved its height.
+
+     `display: none` deliberately, not unmounting the component: PlayerDock owns
+     the page's only <audio> element (S4) and a hidden element keeps playing, so
+     the iPod's controls still drive audio exactly as they do on desktop. */
+  :root { --dock-h: 0px; }
+  .dock { display: none; }
   /* iOS zooms the whole page when a focused input is under 16px. */
   .field input { font-size: 16px; }
-  .dock-time { display: none; }
   .pod { width: min(290px, 86vw); }
   .pod-row { grid-template-columns: 28px 1fr auto; gap: 11px; padding: 12px 8px; }
   .pod-row-plays { display: none; }
