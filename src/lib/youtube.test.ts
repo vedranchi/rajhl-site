@@ -1,147 +1,250 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import {
+  decodeEntities,
   fetchLatestVideo,
   fetchLatestVideos,
   formatPublished,
-  formatViews,
-  parseLatestVideo,
-  parseVideos,
+  mapPlaylistItems,
+  uploadsPlaylistId,
 } from "./youtube";
 
-/** Trimmed copy of a real response from
-    youtube.com/feeds/videos.xml?channel_id=UCMcvYZ58vysUkGQbBfalkxQ — two
-    entries, so the parser has to prove it takes the first. */
-const FEED = `<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/">
- <title>Luka Rajhl</title>
- <entry>
-  <id>yt:video:GAb5lT1zNiE</id>
-  <yt:videoId>GAb5lT1zNiE</yt:videoId>
-  <title>The Most UNDERRATED Instrument &amp; &quot;Sound&quot;</title>
-  <link rel="alternate" href="https://www.youtube.com/watch?v=GAb5lT1zNiE"/>
-  <published>2026-08-30T01:28:21+00:00</published>
-  <media:group>
-   <media:title>The Most UNDERRATED Instrument</media:title>
-   <media:thumbnail url="https://i4.ytimg.com/vi/GAb5lT1zNiE/hqdefault.jpg" width="480" height="360"/>
-   <media:community>
-    <media:starRating count="33" average="5.00" min="1" max="5"/>
-    <media:statistics views="593"/>
-   </media:community>
-  </media:group>
- </entry>
- <entry>
-  <yt:videoId>OLDER123456</yt:videoId>
-  <title>How to LARP HOUSE Beats</title>
-  <published>2026-08-21T22:27:45+00:00</published>
- </entry>
-</feed>`;
+/** Captured before any test stubs the env, so the live contract test below can
+    tell "no key configured" from "a test stubbed one in". */
+const LIVE_KEY = process.env.YOUTUBE_API_KEY;
+
+const TUTORIALS_CHANNEL = "UCMcvYZ58vysUkGQbBfalkxQ";
+
+/** Trimmed copy of a real `playlistItems.list?part=snippet,contentDetails`
+    response — three rows, so the mapper has to prove it keeps feed order, and
+    the middle one is a private-video placeholder it has to drop. */
+const PLAYLIST = {
+  kind: "youtube#playlistItemListResponse",
+  items: [
+    {
+      snippet: {
+        // The API hands back HTML-escaped titles even in JSON.
+        title: "The Most UNDERRATED Instrument &amp; &quot;Sound&quot;",
+        // Deliberately different from videoPublishedAt: this is the playlist
+        // insertion time, which is not what we want to display.
+        publishedAt: "2026-09-01T12:00:00Z",
+        resourceId: { kind: "youtube#video", videoId: "GAb5lT1zNiE" },
+      },
+      contentDetails: {
+        videoId: "GAb5lT1zNiE",
+        videoPublishedAt: "2026-08-30T01:28:21Z",
+      },
+    },
+    {
+      snippet: { title: "Private video", publishedAt: "2026-08-25T00:00:00Z" },
+      contentDetails: { videoId: "PRIVATE1234" },
+    },
+    {
+      snippet: {
+        title: "How to LARP HOUSE Beats",
+        resourceId: { kind: "youtube#video", videoId: "OLDER123456" },
+      },
+      contentDetails: {
+        videoId: "OLDER123456",
+        videoPublishedAt: "2026-08-21T22:27:45Z",
+      },
+    },
+  ],
+};
+
+const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
+
+/** A healthy fetch: one playlistItems call, and deliberately no second one. */
+function stubHappyPath() {
+  const fetchMock = vi.fn().mockResolvedValue(ok(PLAYLIST));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+beforeEach(() => {
+  vi.stubEnv("YOUTUBE_API_KEY", "test-key");
+  // The module logs every giving-up path on purpose; keep the run readable.
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
-describe("parseLatestVideo", () => {
-  it("reads the newest entry, not a later one", () => {
-    const video = parseLatestVideo(FEED);
-    expect(video?.id).toBe("GAb5lT1zNiE");
-    expect(video?.url).toBe("https://www.youtube.com/watch?v=GAb5lT1zNiE");
+describe("uploadsPlaylistId", () => {
+  it("swaps the UC channel prefix for the UU uploads prefix", () => {
+    expect(uploadsPlaylistId(TUTORIALS_CHANNEL)).toBe("UUMcvYZ58vysUkGQbBfalkxQ");
   });
 
-  it("decodes XML entities in the title", () => {
-    expect(parseLatestVideo(FEED)?.title).toBe('The Most UNDERRATED Instrument & "Sound"');
+  it("leaves an id that is already a playlist id alone", () => {
+    expect(uploadsPlaylistId("UUMcvYZ58vysUkGQbBfalkxQ")).toBe("UUMcvYZ58vysUkGQbBfalkxQ");
+  });
+});
+
+describe("mapPlaylistItems", () => {
+  it("keeps feed order, newest first", () => {
+    expect(mapPlaylistItems(PLAYLIST, 3).map((v) => v.id)).toEqual([
+      "GAb5lT1zNiE",
+      "OLDER123456",
+    ]);
   });
 
-  it("does not mistake <media:title> for the video title", () => {
-    expect(parseLatestVideo(FEED)?.title).not.toBe("The Most UNDERRATED Instrument");
+  it("drops private and deleted placeholders instead of rendering them", () => {
+    expect(mapPlaylistItems(PLAYLIST, 3).map((v) => v.id)).not.toContain("PRIVATE1234");
+  });
+
+  it("decodes HTML entities in the title", () => {
+    expect(mapPlaylistItems(PLAYLIST, 1)[0].title).toBe(
+      'The Most UNDERRATED Instrument & "Sound"',
+    );
+  });
+
+  it("prefers the upload time over the playlist insertion time", () => {
+    const video = mapPlaylistItems(PLAYLIST, 1)[0];
+    expect(video.publishedAt).toBe("2026-08-30T01:28:21Z");
+    expect(video.publishedLabel).toBe("30 Aug 2026");
+  });
+
+  it("falls back to snippet.publishedAt when the upload time is absent", () => {
+    const body = { items: [{ snippet: { title: "T", publishedAt: "2026-08-21T22:27:45Z" }, contentDetails: { videoId: "abc" } }] };
+    expect(mapPlaylistItems(body, 1)[0].publishedAt).toBe("2026-08-21T22:27:45Z");
   });
 
   it("pins the thumbnail to the stable ytimg host", () => {
-    expect(parseLatestVideo(FEED)?.thumbnail).toBe(
+    expect(mapPlaylistItems(PLAYLIST, 1)[0].thumbnail).toBe(
       "https://i.ytimg.com/vi/GAb5lT1zNiE/hqdefault.jpg",
     );
   });
 
-  it("formats the publish date and view count for display", () => {
-    const video = parseLatestVideo(FEED);
-    expect(video?.publishedAt).toBe("2026-08-30T01:28:21+00:00");
-    expect(video?.publishedLabel).toBe("30 Aug 2026");
-    expect(video?.viewsLabel).toBe("593 views");
-  });
-
-  it("returns null for a feed with no entries", () => {
-    expect(parseLatestVideo("<feed><title>Luka Rajhl</title></feed>")).toBeNull();
-  });
-
-  it("returns null when the entry has no video id", () => {
-    expect(parseLatestVideo("<feed><entry><title>Broken</title></entry></feed>")).toBeNull();
-  });
-
-  it("survives a missing statistics block", () => {
-    const video = parseLatestVideo(
-      "<feed><entry><yt:videoId>abc</yt:videoId><title>No stats</title></entry></feed>",
+  it("builds the canonical watch url", () => {
+    expect(mapPlaylistItems(PLAYLIST, 1)[0].url).toBe(
+      "https://www.youtube.com/watch?v=GAb5lT1zNiE",
     );
-    expect(video?.viewsLabel).toBeNull();
-    expect(video?.publishedLabel).toBeNull();
-  });
-});
-
-describe("parseVideos", () => {
-  it("returns entries newest first, capped at the limit", () => {
-    const videos = parseVideos(FEED, 2);
-    expect(videos.map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
   });
 
-  it("stops at the limit even when the feed has more", () => {
-    expect(parseVideos(FEED, 1)).toHaveLength(1);
+  it("caps at the limit", () => {
+    expect(mapPlaylistItems(PLAYLIST, 1)).toHaveLength(1);
   });
 
-  it("asks for more than the feed holds without padding the list", () => {
-    expect(parseVideos(FEED, 10)).toHaveLength(2);
+  it("asks for more than the playlist holds without padding the list", () => {
+    expect(mapPlaylistItems(PLAYLIST, 10)).toHaveLength(2);
   });
 
-  it("skips an unparseable entry instead of dropping the rest", () => {
-    const feed = `<feed><entry><title>No id</title></entry>${FEED.slice(FEED.indexOf("<entry>"))}`;
-    expect(parseVideos(feed, 3).map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
+  it("skips an unmappable row instead of dropping the rest", () => {
+    const body = { items: [{ snippet: { title: "No id" } }, ...PLAYLIST.items] };
+    expect(mapPlaylistItems(body, 3).map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
   });
 
-  it("returns an empty list for a feed with no entries", () => {
-    expect(parseVideos("<feed></feed>", 3)).toEqual([]);
+  it("returns an empty list for an empty or malformed body", () => {
+    expect(mapPlaylistItems({ items: [] }, 3)).toEqual([]);
+    expect(mapPlaylistItems({}, 3)).toEqual([]);
+    expect(mapPlaylistItems(null, 3)).toEqual([]);
+    expect(mapPlaylistItems({ items: "not an array" }, 3)).toEqual([]);
   });
+
 });
 
 describe("fetchLatestVideos", () => {
-  it("passes the limit through to the parser", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, text: async () => FEED }));
-    expect(await fetchLatestVideos("UC123", 2)).toHaveLength(2);
+  it("requests the uploads playlist and makes no second call for stats", async () => {
+    const fetchMock = stubHappyPath();
+
+    const videos = await fetchLatestVideos(TUTORIALS_CHANNEL, 3);
+
+    // View counts are off the site, so a videos.list leg would be pure waste.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const playlistUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(playlistUrl.origin + playlistUrl.pathname).toBe(
+      "https://www.googleapis.com/youtube/v3/playlistItems",
+    );
+    expect(playlistUrl.searchParams.get("part")).toBe("snippet,contentDetails");
+    expect(playlistUrl.searchParams.get("playlistId")).toBe("UUMcvYZ58vysUkGQbBfalkxQ");
+    expect(playlistUrl.searchParams.get("key")).toBe("test-key");
+    // Over-fetches so dropped placeholders cannot shrink the list below 3.
+    expect(Number(playlistUrl.searchParams.get("maxResults"))).toBeGreaterThan(3);
+
+    expect(videos.map((v) => v.id)).toEqual(["GAb5lT1zNiE", "OLDER123456"]);
   });
 
-  it("returns an empty list on failure, so a plate can still render", async () => {
+  it("caches the call for an hour", async () => {
+    const fetchMock = stubHappyPath();
+    await fetchLatestVideos(TUTORIALS_CHANNEL, 3);
+    expect(fetchMock.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ next: { revalidate: 3600 } }),
+    );
+  });
+
+  it("never asks for more than the API's 50-row page", async () => {
+    const fetchMock = stubHappyPath();
+    await fetchLatestVideos(TUTORIALS_CHANNEL, 50);
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(Number(url.searchParams.get("maxResults"))).toBeLessThanOrEqual(50);
+  });
+
+  it("returns an empty list and warns when no API key is configured", async () => {
+    vi.stubEnv("YOUTUBE_API_KEY", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(await fetchLatestVideos(TUTORIALS_CHANNEL, 3)).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("YOUTUBE_API_KEY"));
+  });
+
+  it("warns loudly on a non-OK response instead of failing silently", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({}) }),
+    );
+
+    expect(await fetchLatestVideos(TUTORIALS_CHANNEL, 3)).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("404"));
+  });
+
+  it("warns when the response parses but yields nothing renderable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok({ items: [] })));
+
+    expect(await fetchLatestVideos(TUTORIALS_CHANNEL, 3)).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no renderable uploads"));
+  });
+
+  it("returns an empty list when the request throws, so a plate can still render", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
-    expect(await fetchLatestVideos("UC123", 3)).toEqual([]);
+    expect(await fetchLatestVideos(TUTORIALS_CHANNEL, 3)).toEqual([]);
   });
 });
 
-describe("formatViews", () => {
-  it("keeps small counts exact and singular-aware", () => {
-    expect(formatViews(1)).toBe("1 view");
-    expect(formatViews(0)).toBe("0 views");
-    expect(formatViews(593)).toBe("593 views");
+describe("fetchLatestVideo", () => {
+  it("returns just the newest upload", async () => {
+    stubHappyPath();
+    const video = await fetchLatestVideo(TUTORIALS_CHANNEL);
+    expect(video?.id).toBe("GAb5lT1zNiE");
+    expect(video?.publishedLabel).toBe("30 Aug 2026");
   });
 
-  it("abbreviates thousands and millions", () => {
-    expect(formatViews(1500)).toBe("1.5K views");
-    expect(formatViews(5000)).toBe("5K views");
-    expect(formatViews(2_000_000)).toBe("2M views");
-    expect(formatViews(12_400)).toBe("12K views");
-    expect(formatViews(1_250_000)).toBe("1.3M views");
-    expect(formatViews(24_000_000)).toBe("24M views");
+  it("returns null on failure, so the hero can fall back", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    expect(await fetchLatestVideo(TUTORIALS_CHANNEL)).toBeNull();
+  });
+});
+
+describe("decodeEntities", () => {
+  it("decodes named, decimal and hex entities", () => {
+    expect(decodeEntities("a &amp; b")).toBe("a & b");
+    expect(decodeEntities("it&#39;s")).toBe("it's");
+    expect(decodeEntities("&#x2764;")).toBe("❤");
+  });
+
+  it("leaves an unknown entity untouched rather than mangling it", () => {
+    expect(decodeEntities("100&nope; ok")).toBe("100&nope; ok");
   });
 });
 
 describe("formatPublished", () => {
   it("formats an ISO date in UTC", () => {
-    expect(formatPublished("2026-08-30T01:28:21+00:00")).toBe("30 Aug 2026");
+    expect(formatPublished("2026-08-30T01:28:21Z")).toBe("30 Aug 2026");
   });
 
   it("returns null for an unparseable date", () => {
@@ -149,27 +252,31 @@ describe("formatPublished", () => {
   });
 });
 
-describe("fetchLatestVideo", () => {
-  it("requests the channel's feed and parses it", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => FEED });
-    vi.stubGlobal("fetch", fetchMock);
-
-    const video = await fetchLatestVideo("UCMcvYZ58vysUkGQbBfalkxQ");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://www.youtube.com/feeds/videos.xml?channel_id=UCMcvYZ58vysUkGQbBfalkxQ",
-      expect.objectContaining({ next: { revalidate: 3600 } }),
-    );
-    expect(video?.id).toBe("GAb5lT1zNiE");
+/**
+ * The regression this module exists because of was upstream going away while
+ * every fixture-backed test stayed green. This one talks to the real API, so a
+ * retired endpoint or a changed response shape fails here instead of quietly
+ * emptying the deployed page.
+ *
+ * Skipped when no YOUTUBE_API_KEY is configured, so it never flakes a CI run
+ * that has no credentials.
+ */
+describe.skipIf(!LIVE_KEY)("live Data API contract", () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals();
+    vi.stubEnv("YOUTUBE_API_KEY", LIVE_KEY!);
   });
 
-  it("returns null on a non-OK response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, text: async () => "" }));
-    expect(await fetchLatestVideo("UC123")).toBeNull();
-  });
+  it("returns real uploads for the tutorials channel", async () => {
+    const videos = await fetchLatestVideos(TUTORIALS_CHANNEL, 3);
 
-  it("returns null when the request throws, so the hero can fall back", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
-    expect(await fetchLatestVideo("UC123")).toBeNull();
-  });
+    expect(videos.length).toBeGreaterThan(0);
+    for (const video of videos) {
+      expect(video.id).toMatch(/^[\w-]{11}$/);
+      expect(video.title.length).toBeGreaterThan(0);
+      expect(video.title).not.toMatch(/&(amp|quot|#\d+);/);
+      expect(video.publishedAt).not.toBeNull();
+      expect(video.publishedLabel).not.toBeNull();
+    }
+  }, 20_000);
 });

@@ -148,10 +148,14 @@ pnpm · ESLint (no Prettier) · Vitest (no e2e). `src/`, alias `@/*`. Layout: `a
 - **P5** Sales and analytics data: CSV import or manual only.
 - **P6** Integrations: **Instagram** Graph API needs a Business/Creator account + linked
   Facebook Page + Meta app review (Basic Display is deprecated) — conditional, manual
-  fallback until approved. **YouTube** public stats via Data API v3 key; private metrics
-  (watch time, revenue) need channel-owner OAuth. **Telegram** has no useful channel
-  analytics — treat as a link. **Spotify** is the official embed iframe — don't proxy or
-  scrape it.
+  fallback until approved. **YouTube** public stats via Data API v3 key
+  (`YOUTUBE_API_KEY`); private metrics (watch time, revenue) need channel-owner OAuth. The
+  per-channel Atom feed (`youtube.com/feeds/videos.xml?channel_id=`) is **retired** — it
+  404s for every channel id, including channels that are demonstrably alive, so don't
+  "simplify" `src/lib/youtube.ts` back onto it. Uploads come from `playlistItems.list`
+  against the `UC…`→`UU…` uploads playlist, plus one batched `videos.list` for view counts.
+  **Telegram** has no useful channel analytics — treat as a link. **Spotify** is the
+  official embed iframe — don't proxy or scrape it.
 
 ## 10. Design
 Palette authority is `src/app/globals.css` (`@theme` + CSS vars). Read tokens from there;

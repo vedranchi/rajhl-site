@@ -76,10 +76,9 @@ export async function ChannelsSection() {
                             </span>
                             <span className="chan-vid-text">
                               <span className="chan-vid-title">{video.title}</span>
-                              {/* Date only. View counts are deliberately not
-                                  shown here: the client asked for them off the
-                                  channel rows. The feed still returns them and
-                                  the hero card still uses them. */}
+                              {/* Date only. The client asked for view counts
+                                  off the site, so nothing renders them and
+                                  lib/youtube no longer fetches them. */}
                               <span className="chan-vid-meta">
                                 {video.publishedLabel ? (
                                   <time dateTime={video.publishedAt ?? undefined}>
